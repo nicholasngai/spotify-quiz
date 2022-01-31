@@ -25,6 +25,11 @@ module.exports = {
   module: {
     rules: [
       {
+        use: 'source-map-loader',
+        test: /\.js$/,
+        enforce: 'pre',
+      },
+      {
         use: ['style-loader', 'css-loader'],
         test: /\.css$/,
       },
