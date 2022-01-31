@@ -3,16 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "build:server": "tsc -b src/server/tsconfig.json",
     "build:client:tsc": "tsc -b src/client/tsconfig.json",
     "build:client:copyfiles": "copyfiles -u 2 \"src/client/**/*.css\" build/client",
     "build:client:webpack": "webpack -c src/client/webpack.config.js",
     "build:client": "yarn build:client:tsc && yarn build:client:copyfiles && yarn build:client:webpack",
+    "build": "yarn build:server && yarn build:client",
+    "start": "node ./build/server/bin/www.js",
     "watch:client:tsc": "nodemon --ext ts,tsx --watch src/client --exec \"yarn build:client:tsc\"",
     "watch:client:copyfiles": "nodemon --ext css --watch src/client --exec \"yarn build:client:copyfiles\"",
     "watch:client:webpack": "webpack serve -c src/client/webpack.dev.js",
     "watch:client": "concurrently --names tsc,copyfiles,webpack \"yarn watch:client:tsc\" \"yarn watch:client:copyfiles\" \"yarn watch:client:webpack\""
   },
   "devDependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^17.0.13",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
@@ -30,5 +34,8 @@
     "webpack": "^5.67.0",
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.3"
+  },
+  "dependencies": {
+    "express": "^4.17.2"
   }
 }
