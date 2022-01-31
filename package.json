@@ -3,14 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:client": "tsc -b src/client/tsconfig.json && webpack -c src/client/webpack.config.js"
+    "build:client:tsc": "tsc -b src/client/tsconfig.json",
+    "build:client:copyfiles": "copyfiles -u 2 \"src/client/**/*.css\" build/client",
+    "build:client:webpack": "webpack -c src/client/webpack.config.js",
+    "build:client": "yarn build:client:tsc && yarn build:client:copyfiles && yarn build:client:webpack"
   },
   "devDependencies": {
     "@types/node": "^17.0.13",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^10.2.3",
+    "copyfiles": "^2.4.1",
+    "css-loader": "^6.5.1",
+    "html-webpack-plugin": "^5.5.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "style-loader": "^3.3.1",
     "typescript": "^4.5.5",
     "webpack": "^5.67.0",
     "webpack-cli": "^4.9.2"
