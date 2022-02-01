@@ -1,3 +1,4 @@
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 
@@ -7,6 +8,9 @@ export default defineConfig({
     outDir: path.resolve(__dirname, '../../build/server/client'),
     emptyOutDir: true,
   },
+  plugins: [
+    react(),
+  ],
   server: {
     proxy: {
       '/api': 'http://localhost:8080',
