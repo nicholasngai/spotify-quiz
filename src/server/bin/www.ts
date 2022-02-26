@@ -3,8 +3,8 @@ import app from '../app';
 
 let port: number | string = 8080;
 if (process.env.PORT) {
-  const parsedPort = parseInt(process.env.PORT);
-  if (!isNaN(parsedPort)) {
+  const parsedPort = parseInt(process.env.PORT, 10);
+  if (!Number.isNaN(parsedPort)) {
     /* parsedPort is a valid int. Bind to TCP. */
     port = parsedPort;
   } else {
