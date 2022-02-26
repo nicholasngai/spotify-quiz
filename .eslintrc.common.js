@@ -42,5 +42,6 @@ module.exports = {
         message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
       },
     ],
+    'react/react-in-jsx-scope': 'off',
   },
 };
