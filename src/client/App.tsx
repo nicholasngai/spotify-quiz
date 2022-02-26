@@ -1,6 +1,6 @@
 import './App.css';
 
-type AppProps = unknown;
+export type AppProps = Record<string, never>;
 
 function App(props: AppProps) {
   return (
