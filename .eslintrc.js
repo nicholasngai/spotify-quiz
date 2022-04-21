@@ -1,7 +1,9 @@
+const path = require('path');
+
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'src/client/tsconfig.json',
+    project: path.resolve(__dirname, 'client/tsconfig.json'),
   },
   settings: {
     react: {
@@ -25,6 +27,7 @@ module.exports = {
         args: 'none',
       },
     ],
+    'import/no-extraneous-dependencies': 'off',
     'import/prefer-default-export': 'off',
     'no-restricted-syntax': [
       'error',
