@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   publicDir: path.resolve(__dirname, '../public'),
   build: {
-    outDir: path.resolve(__dirname, '../build/dist/client'),
+    outDir: path.resolve(__dirname, '../build/dist/www'),
     emptyOutDir: true,
   },
   plugins: [

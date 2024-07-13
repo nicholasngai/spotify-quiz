@@ -1,15 +1,15 @@
 {
-  "name": "pelican-core",
+  "name": "react-template",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build:server": "go build -o ./build/dist/server ./cmd/server",
-    "build:client": "concurrently --names tsc,vite \"tsc -b client/tsconfig.json\" \"vite build client\"",
+    "build:client": "tsc -b client/tsconfig.json && vite build client",
     "build": "yarn build:server && yarn build:client",
     "start": "cd build/dist && ./server",
-    "watch:server": "nodemon -x \"go run ./cmd/server\"",
-    "watch:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput client/tsconfig.json\" \"vite --clearScreen false client\"",
-    "watch": "concurrently --names server,client \"yarn watch:server\" \"yarn watch:client\"",
+    "dev:server": "nodemon -x \"go run ./cmd/server\"",
+    "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput client/tsconfig.json\" \"vite --clearScreen false client\"",
+    "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
     "lint": "eslint client",
     "clean": "rimraf build"
   },

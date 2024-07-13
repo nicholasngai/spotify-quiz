@@ -10,7 +10,7 @@ func GetHandler() http.Handler {
 	mux := http.NewServeMux()
 
 	// Routes.
-	mux.Handle("/", http.FileServer(http.Dir("client")))
+	mux.Handle("/", http.FileServer(http.Dir("www")))
 
 	// Middleware.
 	var handler http.Handler = mux
