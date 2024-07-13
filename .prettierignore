@@ -1,5 +1,7 @@
+esbuild.js
+esbuild.config.js
+eslint.config.js
 package.json
 tsconfig.json
-vite.*.ts
-.eslintrc.js
+vite.config.ts
 .prettierrc.js

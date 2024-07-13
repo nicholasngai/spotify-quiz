@@ -10,10 +10,12 @@
     "dev:server": "nodemon -e go -x \"go run ./cmd/server\"",
     "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput client/tsconfig.json\" \"vite --clearScreen false client\"",
     "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
-    "lint": "eslint client",
+    "lint": "eslint",
     "clean": "rimraf build"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.1.1",
+    "@eslint/eslintrc": "^3.1.0",
     "@types/node": "^20.14.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
