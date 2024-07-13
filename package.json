@@ -7,7 +7,7 @@
     "build:client": "tsc -b src/client/tsconfig.json && vite build src/client",
     "build": "yarn build:server && yarn build:client",
     "start": "cd build/dist && node server.js",
-    "dev:server": "NODE_ENV=development concurrently --names tsc,nodemon \"tsc -b -w --preserveWatchOutput src/server/tsconfig.json\" \"nodemon build/server/bin/www.js\"",
+    "dev:server": "concurrently --names tsc,nodemon \"tsc -b -w --preserveWatchOutput src/server/tsconfig.json\" \"nodemon build/server/bin/www.js\"",
     "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput src/client/tsconfig.json\" \"vite --clearScreen false src/client\"",
     "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
     "lint:client": "eslint -c src/client/.eslintrc.js src/client",
