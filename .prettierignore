@@ -1,5 +1,5 @@
 package.json
 tsconfig.json
-vite.*.ts
+vite.config.ts
 .eslintrc.js
 .prettierrc.js

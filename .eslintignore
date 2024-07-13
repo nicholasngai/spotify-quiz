@@ -1,5 +1,5 @@
 vite.config.ts
 esbuild.js
-esbuild.*.js
+esbuild.config.js
 .eslintrc.js
 .prettierrc.js
