@@ -3,9 +3,9 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  publicDir: path.resolve(__dirname, '../../public'),
+  publicDir: path.resolve(__dirname, '../public'),
   build: {
-    outDir: path.resolve(__dirname, '../../build/dist/www'),
+    outDir: path.resolve(__dirname, '../build/dist/www'),
     emptyOutDir: true,
   },
   plugins: [
