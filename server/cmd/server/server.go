@@ -4,8 +4,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"server"
 	"strconv"
+
+	"github.com/nicholasngai/react-template/server"
 )
 
 func main() {
