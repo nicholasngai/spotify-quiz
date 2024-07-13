@@ -13,13 +13,6 @@ const config = {
   logLevel: 'info',
 };
 
-const devConfig = {
-  ...config,
-  minify: false,
-  watch: true,
-};
-
 module.exports = {
   config,
-  devConfig,
 };
