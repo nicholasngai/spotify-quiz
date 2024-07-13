@@ -7,7 +7,7 @@
     "build:client": "tsc -b client/tsconfig.json && vite build client",
     "build": "yarn build:server && yarn build:client",
     "start": "cd build/dist && ./server",
-    "dev:server": "nodemon -x \"go run ./cmd/server\"",
+    "dev:server": "nodemon -e go -x \"go run ./cmd/server\"",
     "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput client/tsconfig.json\" \"vite --clearScreen false client\"",
     "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
     "lint": "eslint client",
