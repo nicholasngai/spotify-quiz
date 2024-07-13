@@ -11,6 +11,7 @@ func GetHandler() http.Handler {
 
 	// Routes.
 	mux.Handle("/", http.FileServer(http.Dir("www")))
+	mux.Handle("/api/helloworld", http.HandlerFunc(HelloWorldHandler))
 
 	// Middleware.
 	var handler http.Handler = mux
