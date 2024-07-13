@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:server": "concurrently --names tsc,esbuild \"tsc -b src/server/tsconfig.json\" \"node src/server/esbuild.js\"",
-    "build:client": "concurrently --names tsc,vite \"tsc -b src/client/tsconfig.json\" \"vite build src/client\"",
+    "build:server": "tsc -b src/server/tsconfig.json && node src/server/esbuild.js",
+    "build:client": "tsc -b src/client/tsconfig.json && vite build src/client",
     "build": "yarn build:server && yarn build:client",
     "start": "node ./build/dist/server.js",
     "dev:server": "NODE_ENV=development concurrently --names tsc,esbuild,nodemon \"tsc -b -w --preserveWatchOutput src/server/tsconfig.json\" \"node src/server/esbuild.dev.js\" \"nodemon build/dist/server.js\"",
