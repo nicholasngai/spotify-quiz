@@ -1,3 +1,5 @@
+esbuild.js
+esbuild.config.js
 package.json
 tsconfig.json
 vite.config.ts
