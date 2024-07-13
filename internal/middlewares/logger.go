@@ -1,4 +1,4 @@
-package server
+package middlewares
 
 import (
 	"log"
@@ -15,7 +15,7 @@ func (w *loggerRecorder) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func loggerMiddleware(next http.Handler) http.Handler {
+func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		recorder := loggerRecorder{w, -1}
 		next.ServeHTTP(&recorder, r)

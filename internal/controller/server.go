@@ -1,10 +1,12 @@
-package server
+package controller
 
 import (
 	"net/http"
+
+	"github.com/nicholasngai/react-template/internal/middlewares"
 )
 
-func GetServer() http.Handler {
+func GetHandler() http.Handler {
 	mux := http.NewServeMux()
 
 	// Routes.
@@ -12,7 +14,7 @@ func GetServer() http.Handler {
 
 	// Middleware.
 	var handler http.Handler = mux
-	handler = loggerMiddleware(handler)
+	handler = middlewares.Logger(handler)
 
 	return handler
 }
