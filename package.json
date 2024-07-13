@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:server": "tsc -b && node esbuild.js",
+    "build:server": "tsc -b src/server/tsconfig.json && node src/server/esbuild.js",
     "build:client": "tsc -b src/client/tsconfig.json && vite build src/client",
     "build": "yarn build:server && yarn build:client",
     "start": "cd build/dist && node server.js",
-    "dev:server": "concurrently --names tsc,nodemon \"tsc -b -w --preserveWatchOutput src/tsconfig.json\" \"nodemon build/server/bin/www.js\"",
+    "dev:server": "concurrently --names tsc,nodemon \"tsc -b -w --preserveWatchOutput src/server/tsconfig.json\" \"nodemon build/server/bin/www.js\"",
     "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput src/client/tsconfig.json\" \"vite --clearScreen false src/client\"",
     "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
     "lint:client": "eslint -c src/client/.eslintrc.js src/client",
-    "lint:server": "eslint -c src/eslintrc.js src",
+    "lint:server": "eslint -c src/server/.eslintrc.js src/server",
     "lint": "yarn lint:server && yarn lint:client",
     "clean": "rimraf build"
   },

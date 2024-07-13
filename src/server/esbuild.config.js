@@ -3,11 +3,13 @@ const { nodeExternalsPlugin } = require('esbuild-node-externals');
 
 const config = {
   platform: 'node',
-  entryPoints: [path.resolve(__dirname, 'build/bin/www.js')],
-  outfile: path.resolve(__dirname, 'build/dist/server.js'),
+  entryPoints: [path.resolve(__dirname, 'bin/www.ts')],
+  outfile: path.resolve(__dirname, '../../build/dist/server.js'),
   bundle: true,
   minify: true,
-  plugins: [nodeExternalsPlugin()],
+  plugins: [
+    nodeExternalsPlugin(),
+  ],
   logLevel: 'info',
 };
 
