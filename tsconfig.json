@@ -7,11 +7,11 @@
     "jsx": "react-jsx",
     "experimentalDecorators": false,
     "module": "commonjs",
-    "rootDir": ".",
+    "rootDir": "src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "../../build/server",
+    "outDir": "build",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -27,5 +27,11 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/client"
+  ]
 }
