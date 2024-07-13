@@ -1,3 +1,3 @@
 module github.com/nicholasngai/react-template
 
-go 1.18
+go 1.22.5
