@@ -20,6 +20,6 @@ func main() {
 	mux := controller.GetHandler()
 	err := http.ListenAndServe(bind+":"+strconv.FormatInt(port, 10), mux)
 	if err != nil {
-		log.Fatal("Error starting server: "+err.Error())
+		log.Fatal("Error starting server: " + err.Error())
 	}
 }
