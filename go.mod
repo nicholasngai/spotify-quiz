@@ -2,10 +2,7 @@ module github.com/nicholasngai/react-template
 
 go 1.22.5
 
-require (
-	github.com/golangci/golangci-lint v1.59.1
-	github.com/incu6us/goimports-reviser/v3 v3.6.5
-)
+require github.com/golangci/golangci-lint v1.59.1
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect

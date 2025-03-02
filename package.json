@@ -10,7 +10,7 @@
     "dev:server": "nodemon -e go -x \"go run ./cmd/server\"",
     "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput client/tsconfig.json\" \"vite --clearScreen false client\"",
     "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
-    "lint:server": "go run github.com/golangci/golangci-lint/cmd/golangci-lint run && go run github.com/incu6us/goimports-reviser/v3 .",
+    "lint:server": "go run github.com/golangci/golangci-lint/cmd/golangci-lint run",
     "lint:client": "eslint",
     "lint": "yarn lint:server && yarn lint:client",
     "clean": "rimraf build"
