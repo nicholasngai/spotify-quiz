@@ -2,18 +2,19 @@ linters:
   enable:
     - asciicheck
     - bodyclose
+    - copyloopvar
     - dogsled
     - dupl
     - durationcheck
     - errcheck
     - errorlint
     - exhaustive
-    - exportloopref
     - forbidigo
     - gci
     - gocognit
     - gocritic
     - gocyclo
+    - gofmt
     - gofumpt
     - goheader
     - gomoddirectives
