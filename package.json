@@ -3,21 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:server": "tsc -b server/tsconfig.json && node server/esbuild.js",
+    "build:server": "go build -o ./build/dist/server ./cmd/server",
     "build:client": "tsc -b client/tsconfig.json && vite build client",
     "build": "yarn build:server && yarn build:client",
-    "start": "cd build/dist && node server.js",
-    "dev:server": "concurrently --names tsc,nodemon \"tsc -b -w --preserveWatchOutput server/tsconfig.json\" \"nodemon build/server/bin/www.js\"",
+    "start": "cd build/dist && ./server",
+    "dev:server": "nodemon -e go -x \"go run ./cmd/server\"",
     "dev:client": "concurrently --names tsc,vite \"tsc -b -w --preserveWatchOutput client/tsconfig.json\" \"vite --clearScreen false client\"",
     "dev": "concurrently --names server,client \"yarn dev:server\" \"yarn dev:client\"",
-    "lint": "eslint",
+    "lint:server": "go run github.com/golangci/golangci-lint/cmd/golangci-lint run",
+    "lint:client": "eslint",
+    "lint": "yarn lint:server && yarn lint:client",
     "clean": "rimraf build"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^3.1.0",
-    "@types/express": "^4.17.21",
-    "@types/morgan": "^1.9.9",
     "@types/node": "^20.14.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -25,8 +25,6 @@
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^8.2.2",
-    "esbuild": "^0.23.0",
-    "esbuild-node-externals": "^1.14.0",
     "eslint": "^9.7.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
@@ -43,9 +41,5 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.5.3",
     "vite": "^5.3.3"
-  },
-  "dependencies": {
-    "express": "^4.19.2",
-    "morgan": "^1.10.0"
   }
 }

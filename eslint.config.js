@@ -15,8 +15,6 @@ module.exports = [
     ignores: [
       'build/**',
       '**/.prettierrc.js',
-      '**/esbuild.js',
-      '**/esbuild.config.js',
       '**/eslint.config.js',
       '**/vite.config.ts',
     ],
@@ -32,7 +30,6 @@ module.exports = [
   {
     files: [
       'client/**',
-      'server/**',
     ],
     languageOptions: {
       parser: typescriptParser,
@@ -57,6 +54,7 @@ module.exports = [
           args: 'none',
         },
       ],
+      'import/no-extraneous-dependencies': 'off',
       'import/prefer-default-export': 'off',
       'no-restricted-syntax': [
         'error',
@@ -74,30 +72,6 @@ module.exports = [
           message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
         },
       ],
-    },
-  },
-  // Client config.
-  {
-    files: ['client/**'],
-    languageOptions: {
-      parserOptions: {
-        project: 'client/tsconfig.json',
-      },
-    },
-    rules: {
-      'import/no-extraneous-dependencies': 'off',
-    },
-  },
-  // Server config.
-  {
-    files: ['server/**'],
-    languageOptions: {
-      parserOptions: {
-        project: 'server/tsconfig.json',
-      },
-    },
-    rules: {
-      'no-console': 'off',
     },
   },
 ];
