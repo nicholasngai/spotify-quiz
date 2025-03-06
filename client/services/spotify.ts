@@ -70,6 +70,7 @@ export async function fetchAccessToken(verifier: string, authCode: string): Prom
   const body: AccessTokenResponse = await res.json();
   return {
     accessToken: body.access_token,
+    issueTime: new Date(),
     expirySeconds: body.expires_in,
     refreshToken: body.refresh_token!,
   };
@@ -94,6 +95,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenBun
   const body: AccessTokenResponse = await res.json();
   return {
     accessToken: body.access_token,
+    issueTime: new Date(),
     expirySeconds: body.expires_in,
     refreshToken: body.refresh_token ?? refreshToken,
   };

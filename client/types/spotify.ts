@@ -1,5 +1,6 @@
 export type TokenBundle = {
   accessToken: string;
+  issueTime: Date;
   expirySeconds: number;
   refreshToken: string;
 };
@@ -10,6 +11,8 @@ export function validateTokenBundle(obj: unknown): obj is TokenBundle {
     obj != null &&
     'accessToken' in obj &&
     typeof obj.accessToken === 'string' &&
+    'issueTime' in obj &&
+    obj.issueTime instanceof Date &&
     'expirySeconds' in obj &&
     typeof obj.expirySeconds === 'number' &&
     'refreshToken' in obj &&

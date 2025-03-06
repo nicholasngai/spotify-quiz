@@ -24,7 +24,18 @@ export function loadTokenBundle(): TokenBundle | null {
   if (tokenBundleJson == null) {
     return null;
   }
-  const tokenBundle = JSON.parse(tokenBundleJson);
+  const tokenBundleRaw = JSON.parse(tokenBundleJson);
+  if (
+    typeof tokenBundleRaw !== 'object' ||
+    !('issueTime' in tokenBundleRaw) ||
+    typeof tokenBundleRaw.issueTime !== 'string'
+  ) {
+    return null;
+  }
+  const tokenBundle = {
+    ...tokenBundleRaw,
+    issueTime: new Date(tokenBundleRaw.issueTime),
+  };
   if (!validateTokenBundle(tokenBundle)) {
     return null;
   }
