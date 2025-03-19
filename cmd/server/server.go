@@ -17,9 +17,8 @@ func main() {
 
 	flag.Parse()
 
-	mux := controller.Handler()
-	err := http.ListenAndServe(bind+":"+strconv.FormatInt(port, 10), mux)
-	if err != nil {
+	var httpController controller.Controller
+	if err := http.ListenAndServe(bind+":"+strconv.FormatInt(port, 10), httpController.Handler()); err != nil {
 		log.Fatal("Error starting server: " + err.Error())
 	}
 }
