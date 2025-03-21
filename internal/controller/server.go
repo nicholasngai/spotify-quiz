@@ -8,7 +8,7 @@ import (
 
 type Controller struct{}
 
-func (c Controller) Handler() http.Handler {
+func (c *Controller) Handler() http.Handler {
 	mux := http.NewServeMux()
 
 	// Routes.
