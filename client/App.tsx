@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import useSpotify, { NotAuthedError } from './services/spotify';
+import useSpotify, { GetCurrentUsersProfileResponse, NotAuthedError, Playlist } from './services/spotify';
 import './App.css';
 
 export type AppProps = Record<string, never>;
 
 function App(props: AppProps) {
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<GetCurrentUsersProfileResponse | null>(null);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   const spotify = useSpotify();
 
@@ -23,16 +25,31 @@ function App(props: AppProps) {
           window.location.replace('/');
         }
 
+        /* Get current profile, and if it fails, we are not logged in. */
+        let currentProfile: GetCurrentUsersProfileResponse;
         try {
-          const currentProfile = await spotify.getCurrentUsersProfile();
-          console.log(currentProfile);
-          setLoading(false);
+          currentProfile = await spotify.getCurrentUsersProfile();
         } catch (e: unknown) {
           if (e instanceof NotAuthedError) {
             setLoading(false);
             return;
+          } else {
+            throw e;
           }
         }
+
+        /* Get playlists. */
+        const playlists: Playlist[] = [];
+        let totalPlaylists = 0;
+        do {
+          const res = await spotify.getCurrentUsersPlaylists(50, 0);
+          playlists.push(...res.items);
+          totalPlaylists = res.total;
+        } while (playlists.length < totalPlaylists);
+
+        setUserProfile(currentProfile);
+        setPlaylists(playlists);
+        setLoading(false);
       }
     })();
   }, []);
@@ -48,8 +65,24 @@ function App(props: AppProps) {
         <>Loading...</>
       ) : (
         <>
-          <p>Hello world!</p>
-          <button onClick={handleSpotifyLogin}>Login</button>
+          {userProfile ? (
+            <>
+              <div className="Header">
+                <img className="Header__profile-img" src={userProfile.images[0]!.url} />
+                {userProfile.display_name}
+              </div>
+              <div className="Playlists">
+                {playlists.map((playlist) => (
+                  <div className="Playlists__playlist">
+                    <img className="Playlists__playlist__img" src={playlist.images[0]!.url} />
+                    {playlist.name}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <button onClick={handleSpotifyLogin}>Login</button>
+          )}
         </>
       )}
     </div>
