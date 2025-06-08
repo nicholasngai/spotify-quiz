@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { TokenBundle } from '../types/spotify';
+import { clearVerifier, loadTokenBundle, loadVerifier, storeTokenBundle, storeVerifier } from '../utils/localStorage';
 
-const BASE_URL = 'https://accounts.spotify.com/api';
+const ACCOUNTS_BASE_URL = 'https://accounts.spotify.com/api';
+const API_BASE_URL = 'https://api.spotify.com';
 
 const CLIENT_ID = '6f335e84feea4d1d99bec6e126bdc17d';
 const SCOPE = 'playlist-read-private playlist-read-collaborative';
 const REDIRECT_URI = 'http://localhost:5173/auth/callback';
 
 /* Generates a 128-bit, random verifier and its corresponding, base64-encoded challenge. */
-export async function generateVerifierAndChallenge(): Promise<{ verifier: string; challenge: string }> {
+async function generateVerifierAndChallenge(): Promise<{ verifier: string; challenge: string }> {
   /* Generate verifier. */
   const verifier = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16)).join('');
 
@@ -24,34 +27,17 @@ export async function generateVerifierAndChallenge(): Promise<{ verifier: string
   };
 }
 
-/* Requests an OAuth2 authorization code. */
-export function initiateOAuth2Flow(challenge: string): void {
-  /* Generate URL. */
-  const authUrl = new URL('https://accounts.spotify.com/authorize');
-  authUrl.search = new URLSearchParams({
-    response_type: 'code',
-    client_id: CLIENT_ID,
-    scope: SCOPE,
-    code_challenge_method: 'S256',
-    code_challenge: challenge,
-    redirect_uri: REDIRECT_URI,
-  }).toString();
-
-  /* Redirect. */
-  window.location.href = authUrl.toString();
-}
-
-type AccessTokenResponse = {
+type AccessTokenResponse = Readonly<{
   access_token: string;
   token_type: string;
   scope: string;
   expires_in: number;
   refresh_token?: string | undefined;
-};
+}>;
 
 /* Requests an OAuth2 access token and refresh token to Spotify resources. */
-export async function fetchAccessToken(verifier: string, authCode: string): Promise<TokenBundle> {
-  const res = await fetch(`${BASE_URL}/token`, {
+async function fetchAccessToken(verifier: string, authCode: string): Promise<TokenBundle> {
+  const res = await fetch(`${ACCOUNTS_BASE_URL}/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -77,8 +63,8 @@ export async function fetchAccessToken(verifier: string, authCode: string): Prom
 }
 
 /* Refreshes an OAuth2 access token. */
-export async function refreshAccessToken(refreshToken: string): Promise<TokenBundle> {
-  const res = await fetch(`${BASE_URL}/token`, {
+async function refreshAccessToken(refreshToken: string): Promise<TokenBundle> {
+  const res = await fetch(`${ACCOUNTS_BASE_URL}/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -100,3 +86,106 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenBun
     refreshToken: body.refresh_token ?? refreshToken,
   };
 }
+
+type GetCurrentUsersProfileResponse = Readonly<{
+  id: string;
+  display_name: string;
+  email: string;
+  images: ReadonlyArray<{
+    url: string;
+    width: number;
+    height: number;
+  }>;
+}>;
+
+/* Gets the current user's profile. */
+async function getCurrentUsersProfile(accessToken: string): Promise<GetCurrentUsersProfileResponse> {
+  const res = await fetch(`${API_BASE_URL}/v1/me`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return await res.json();
+}
+
+class NotAuthedError extends Error {
+  constructor() {
+    super('not authed');
+  }
+}
+
+function useSpotify() {
+  const [tokenBundle, setTokenBundle] = useState<TokenBundle | null>(loadTokenBundle());
+
+  /* Requests an OAuth2 authorization code. */
+  const initiateOAuth2Flow = async () => {
+    /* Generate verifier and challenge. */
+    const { verifier, challenge } = await generateVerifierAndChallenge();
+
+    /* Store the verifier. */
+    storeVerifier(verifier);
+
+    /* Generate URL. */
+    const authUrl = new URL('https://accounts.spotify.com/authorize');
+    authUrl.search = new URLSearchParams({
+      response_type: 'code',
+      client_id: CLIENT_ID,
+      scope: SCOPE,
+      code_challenge_method: 'S256',
+      code_challenge: challenge,
+      redirect_uri: REDIRECT_URI,
+    }).toString();
+
+    /* Redirect. */
+    window.location.href = authUrl.toString();
+  };
+
+  /* Handle callback. */
+  const handleAuthCallback = async () => {
+    /* Get code. */
+    const params = new URLSearchParams(window.location.search);
+    const authCode = params.get('code');
+    if (authCode == null) {
+      // TODO Handle error state.
+      window.location.replace('/');
+      return;
+    }
+
+    /* Get verifier. */
+    const verifier = loadVerifier();
+    if (verifier == null) {
+      // TODO Handle error state.
+      window.location.replace('/');
+      return;
+    }
+
+    /* Fetch access token. */
+    const tb = await fetchAccessToken(verifier, authCode);
+
+    /* Store token bundle and clear verifier. */
+    clearVerifier();
+    storeTokenBundle(tb);
+
+    /* Update state. */
+    window.location.replace('/');
+    setTokenBundle(tb);
+  };
+
+  /* Wrap the current function call that accepts a string token. */
+  const wrapSpotifyCall = <T>(func: (accessToken: string) => T): (() => T) => {
+    return () => {
+      if (!tokenBundle) {
+        throw new NotAuthedError();
+      }
+      return func(tokenBundle.accessToken);
+    };
+  };
+
+  return {
+    handleAuthCallback,
+    initiateOAuth2Flow,
+    getCurrentUsersProfile: wrapSpotifyCall(getCurrentUsersProfile),
+  };
+}
+
+export default useSpotify;
