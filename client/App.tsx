@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Playlists from './components/Playlists';
 import useSpotify, { GetCurrentUsersProfileResponse, NotAuthedError, Playlist } from './services/spotify';
 import './App.css';
 
@@ -71,14 +72,7 @@ function App(props: AppProps) {
                 <img className="Header__profile-img" src={userProfile.images[0]!.url} />
                 {userProfile.display_name}
               </div>
-              <div className="Playlists">
-                {playlists.map((playlist) => (
-                  <div className="Playlists__playlist">
-                    <img className="Playlists__playlist__img" src={playlist.images[0]!.url} />
-                    {playlist.name}
-                  </div>
-                ))}
-              </div>
+              <Playlists playlists={playlists} />
             </>
           ) : (
             <button onClick={handleSpotifyLogin}>Login</button>
