@@ -1,14 +1,32 @@
 import { useEffect, useState } from 'react';
 import Playlists from './components/Playlists';
-import useSpotify, { GetCurrentUsersProfileResponse, NotAuthedError, Playlist } from './services/spotify';
+import useSpotify, {
+  GetCurrentUsersProfileResponse,
+  NotAuthedError,
+  Playlist,
+  PlaylistTrack,
+} from './services/spotify';
 import './App.css';
 
 export type AppProps = Record<string, never>;
 
+function shuffle<T>(arr: T[]): T[] {
+  for (let i = 0; i < arr.length - 1; i++) {
+    const j = Math.floor(Math.random() * (arr.length - i)) + i;
+    const tmp = arr[i]!;
+    arr[i] = arr[j]!;
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
 function App(props: AppProps) {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<GetCurrentUsersProfileResponse | null>(null);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
+  const [selectedPlaylistTracks, setSelectedPlaylistTracks] = useState<PlaylistTrack[] | null>(null);
+  const [questionToTrackIdx, setQuestionToTrackIdx] = useState<number[]>([]);
+  const [questionIdx, setQuestionIdx] = useState<number>(0);
 
   const spotify = useSpotify();
 
@@ -60,6 +78,21 @@ function App(props: AppProps) {
     spotify.initiateOAuth2Flow();
   };
 
+  const handlePlaylistSelect = async (playlistId: string) => {
+    /* Get tracks. */
+    const tracks: PlaylistTrack[] = [];
+    let totalTracks = 0;
+    do {
+      const res = await spotify.getPlaylistTracks(playlistId, 50, 0);
+      tracks.push(...res.items);
+      totalTracks = res.total;
+    } while (tracks.length < totalTracks);
+
+    setSelectedPlaylistTracks(tracks);
+    setQuestionToTrackIdx(shuffle([...new Array(tracks.length)].map((_, idx) => idx)).slice(0, 10));
+    setQuestionIdx(0);
+  };
+
   return (
     <div className="App">
       {loading ? (
@@ -72,7 +105,10 @@ function App(props: AppProps) {
                 <img className="Header__profile-img" src={userProfile.images[0]!.url} />
                 {userProfile.display_name}
               </div>
-              <Playlists playlists={playlists} />
+              {playlists && !selectedPlaylistTracks && (
+                <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
+              )}
+              {playlists && selectedPlaylistTracks && null}
             </>
           ) : (
             <button onClick={handleSpotifyLogin}>Login</button>

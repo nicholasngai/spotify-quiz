@@ -150,6 +150,44 @@ async function getCurrentUsersPlaylists(
   return await res.json();
 }
 
+export type PlaylistTrack = Readonly<{
+  track: Readonly<{
+    id: string;
+    name: string;
+    images: ReadonlyArray<{
+      url: string;
+    }>;
+  }>;
+}>;
+
+export type GetPlaylistTracksResponse = Readonly<{
+  total: number;
+  items: ReadonlyArray<PlaylistTrack>;
+}>;
+
+async function getPlaylistTracks(
+  accessToken: string,
+  playlistId: string,
+  limit: number,
+  offset: number,
+): Promise<GetPlaylistTracksResponse> {
+  const res = await fetch(
+    `${API_BASE_URL}/v1/playlists/${encodeURIComponent(playlistId)}/tracks?limit=${limit}&offset=${offset}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+  if (res.status == 401) {
+    throw new NotAuthedError();
+  }
+  if (!res.ok) {
+    throw new Error(`Not-OK status ${res.status} from /v1/me`);
+  }
+  return await res.json();
+}
+
 function useSpotify() {
   const [tokenBundle, setTokenBundle] = useState<TokenBundle | null>(loadTokenBundle());
 
@@ -253,11 +291,36 @@ function useSpotify() {
     };
   };
 
+  const wrapSpotifyCall3 = <T, P1, P2, P3>(
+    func: (accessToken: string, p1: P1, p2: P2, p3: P3) => Promise<T>,
+  ): ((p1: P1, p2: P2, p3: P3) => Promise<T>) => {
+    return async (p1, p2, p3) => {
+      if (!tokenBundle) {
+        throw new NotAuthedError();
+      }
+      try {
+        return await func(tokenBundle.accessToken, p1, p2, p3);
+      } catch (e: unknown) {
+        if (e instanceof NotAuthedError) {
+          /* If an auth error was encountered, attempt to refresh the token and
+           * try again. */
+          const newTokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
+          storeTokenBundle(newTokenBundle);
+          setTokenBundle(newTokenBundle);
+          return await func(newTokenBundle.accessToken, p1, p2, p3);
+        } else {
+          throw e;
+        }
+      }
+    };
+  };
+
   return {
     handleAuthCallback,
     initiateOAuth2Flow,
     getCurrentUsersProfile: wrapSpotifyCall0(getCurrentUsersProfile),
     getCurrentUsersPlaylists: wrapSpotifyCall2(getCurrentUsersPlaylists),
+    getPlaylistTracks: wrapSpotifyCall3(getPlaylistTracks),
   };
 }
 
