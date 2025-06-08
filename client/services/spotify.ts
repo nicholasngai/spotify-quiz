@@ -9,6 +9,12 @@ const CLIENT_ID = '6f335e84feea4d1d99bec6e126bdc17d';
 const SCOPE = 'playlist-read-private playlist-read-collaborative';
 const REDIRECT_URI = 'http://localhost:5173/auth/callback';
 
+export class NotAuthedError extends Error {
+  constructor() {
+    super('not authed');
+  }
+}
+
 /* Generates a 128-bit, random verifier and its corresponding, base64-encoded challenge. */
 async function generateVerifierAndChallenge(): Promise<{ verifier: string; challenge: string }> {
   /* Generate verifier. */
@@ -96,13 +102,18 @@ export type GetCurrentUsersProfileResponse = Readonly<{
   }>;
 }>;
 
-/* Gets the current user's profile. */
 async function getCurrentUsersProfile(accessToken: string): Promise<GetCurrentUsersProfileResponse> {
   const res = await fetch(`${API_BASE_URL}/v1/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+  if (res.status == 401) {
+    throw new NotAuthedError();
+  }
+  if (!res.ok) {
+    throw new Error(`Not-OK status ${res.status} from /v1/me`);
+  }
   return await res.json();
 }
 
@@ -120,7 +131,6 @@ export type GetUsersPlaylistsResponse = Readonly<{
   items: ReadonlyArray<Playlist>;
 }>;
 
-/* Gets the current user's profile. */
 async function getCurrentUsersPlaylists(
   accessToken: string,
   limit: number,
@@ -131,13 +141,13 @@ async function getCurrentUsersPlaylists(
       Authorization: `Bearer ${accessToken}`,
     },
   });
-  return await res.json();
-}
-
-export class NotAuthedError extends Error {
-  constructor() {
-    super('not authed');
+  if (res.status == 401) {
+    throw new NotAuthedError();
   }
+  if (!res.ok) {
+    throw new Error(`Not-OK status ${res.status} from /v1/me`);
+  }
+  return await res.json();
 }
 
 function useSpotify() {
@@ -197,21 +207,49 @@ function useSpotify() {
     setTokenBundle(tb);
   };
 
-  const wrapSpotifyCall0 = <T>(func: (accessToken: string) => T): (() => T) => {
-    return () => {
+  const wrapSpotifyCall0 = <T>(func: (accessToken: string) => Promise<T>): (() => Promise<T>) => {
+    return async () => {
       if (!tokenBundle) {
         throw new NotAuthedError();
       }
-      return func(tokenBundle.accessToken);
+      try {
+        return await func(tokenBundle.accessToken);
+      } catch (e: unknown) {
+        if (e instanceof NotAuthedError) {
+          /* If an auth error was encountered, attempt to refresh the token and
+           * try again. */
+          const newTokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
+          storeTokenBundle(newTokenBundle);
+          setTokenBundle(newTokenBundle);
+          return await func(newTokenBundle.accessToken);
+        } else {
+          throw e;
+        }
+      }
     };
   };
 
-  const wrapSpotifyCall2 = <T, P1, P2>(func: (accessToken: string, p1: P1, p2: P2) => T): ((p1: P1, p2: P2) => T) => {
-    return (p1, p2) => {
+  const wrapSpotifyCall2 = <T, P1, P2>(
+    func: (accessToken: string, p1: P1, p2: P2) => Promise<T>,
+  ): ((p1: P1, p2: P2) => Promise<T>) => {
+    return async (p1, p2) => {
       if (!tokenBundle) {
         throw new NotAuthedError();
       }
-      return func(tokenBundle.accessToken, p1, p2);
+      try {
+        return await func(tokenBundle.accessToken, p1, p2);
+      } catch (e: unknown) {
+        if (e instanceof NotAuthedError) {
+          /* If an auth error was encountered, attempt to refresh the token and
+           * try again. */
+          const newTokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
+          storeTokenBundle(newTokenBundle);
+          setTokenBundle(newTokenBundle);
+          return await func(newTokenBundle.accessToken, p1, p2);
+        } else {
+          throw e;
+        }
+      }
     };
   };
 
