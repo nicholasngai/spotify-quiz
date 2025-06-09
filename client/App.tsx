@@ -61,7 +61,7 @@ function App(props: AppProps) {
         const playlists: Playlist[] = [];
         let totalPlaylists = 0;
         do {
-          const res = await spotify.getCurrentUsersPlaylists(50, 0);
+          const res = await spotify.getCurrentUsersPlaylists(50, playlists.length);
           playlists.push(...res.items);
           totalPlaylists = res.total;
         } while (playlists.length < totalPlaylists);
@@ -83,7 +83,7 @@ function App(props: AppProps) {
     const tracks: PlaylistTrack[] = [];
     let totalTracks = 0;
     do {
-      const res = await spotify.getPlaylistTracks(playlistId, 50, 0);
+      const res = await spotify.getPlaylistTracks(playlistId, 50, tracks.length);
       tracks.push(...res.items);
       totalTracks = res.total;
     } while (tracks.length < totalTracks);
