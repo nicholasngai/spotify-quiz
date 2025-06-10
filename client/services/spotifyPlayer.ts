@@ -1,15 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-export type State =
-  | {
-      state: false;
-      deviceId?: undefined;
-    }
-  | {
-      state: true;
-      deviceId: string;
-    };
-
 function useSpotifyPlayer(authToken: string | null | undefined) {
   const playerRef = useRef<Spotify.Player>();
   const authTokenRef = useRef(authToken);
@@ -75,9 +65,27 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
     };
   }, []);
 
+  const waitForTrackChanged = async () => {
+    const curState = await playerRef.current!.getCurrentState();
+    await new Promise((resolve) => {
+      const callback = (newState: Spotify.WebPlaybackState) => {
+        if (newState.track_window.current_track.id !== curState?.track_window.current_track.id) {
+          playerRef.current!.removeListener('player_state_changed', callback);
+          resolve(undefined);
+        }
+      };
+      playerRef.current!.addListener('player_state_changed', callback);
+    });
+  };
+
   return {
     ready: state.ready,
     deviceId: state.deviceId,
+    getCurrentState: () => playerRef.current!.getCurrentState(),
+    waitForTrackChanged: waitForTrackChanged,
+    pause: () => playerRef.current!.pause(),
+    resume: () => playerRef.current!.resume(),
+    seek: (positionMs: number) => playerRef.current!.seek(positionMs),
   };
 }
 

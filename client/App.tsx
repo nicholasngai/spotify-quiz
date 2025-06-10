@@ -90,9 +90,39 @@ function App(props: AppProps) {
       totalTracks = res.total;
     } while (tracks.length < totalTracks);
 
+    const newQuestionToTrackIdx = shuffle([...new Array(tracks.length)].map((_, idx) => idx)).slice(0, 10);
+
     setSelectedPlaylistTracks(tracks);
-    setQuestionToTrackIdx(shuffle([...new Array(tracks.length)].map((_, idx) => idx)).slice(0, 10));
+    setQuestionToTrackIdx(newQuestionToTrackIdx);
     setQuestionIdx(0);
+    await playTrack(
+      tracks[newQuestionToTrackIdx[0]!]!.track.id,
+      tracks[newQuestionToTrackIdx[0]!]!.track.duration_ms,
+      2000,
+    );
+  };
+
+  const playTrack = async (trackId: string, trackDurationMs: number, lengthMs: number) => {
+    if (!spotifyPlayer.ready) {
+      throw new Error('Cannot play track before spotify player is ready');
+    }
+
+    /* Choose a random position to seek to. */
+    const randomPosMs = Math.floor(Math.random() * Math.max(trackDurationMs - lengthMs, 0));
+
+    /* Request track to be played. */
+    const waitForTrackChangedTask = spotifyPlayer.waitForTrackChanged();
+    await spotify.play(spotifyPlayer.deviceId, {
+      trackIds: [trackId],
+      positionMs: randomPosMs,
+    });
+    await waitForTrackChangedTask;
+
+    /* Allow the song to play for the specified length. */
+    await new Promise((resolve) => setTimeout(resolve, lengthMs));
+
+    /* Pause. */
+    await spotifyPlayer.pause();
   };
 
   return (

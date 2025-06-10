@@ -157,6 +157,7 @@ export type PlaylistTrack = Readonly<{
     images: ReadonlyArray<{
       url: string;
     }>;
+    duration_ms: number;
   }>;
 }>;
 
@@ -186,6 +187,40 @@ async function getPlaylistTracks(
     throw new Error(`Not-OK status ${res.status} from /v1/me`);
   }
   return await res.json();
+}
+
+async function play(
+  accessToken: string,
+  deviceId?: string,
+  {
+    trackIds,
+    contextUri,
+    offset,
+    positionMs,
+  }: { trackIds?: string[]; contextUri?: string; offset?: number; positionMs?: number } = {},
+): Promise<void> {
+  const res = await fetch(
+    `${API_BASE_URL}/v1/me/player/play${deviceId !== undefined ? `?device_id=${deviceId}` : ''}`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        context_uri: contextUri,
+        uris: trackIds?.map((id) => `spotify:track:${id}`),
+        offset: offset,
+        position_ms: positionMs,
+      }),
+    },
+  );
+  if (res.status == 401) {
+    throw new NotAuthedError();
+  }
+  if (!res.ok) {
+    throw new Error(`Not-OK status ${res.status} from /v1/me/player/play`);
+  }
 }
 
 function useSpotify() {
@@ -322,6 +357,7 @@ function useSpotify() {
     getCurrentUsersProfile: wrapSpotifyCall0(getCurrentUsersProfile),
     getCurrentUsersPlaylists: wrapSpotifyCall2(getCurrentUsersPlaylists),
     getPlaylistTracks: wrapSpotifyCall3(getPlaylistTracks),
+    play: wrapSpotifyCall2(play),
   };
 }
 
