@@ -6,7 +6,7 @@ const ACCOUNTS_BASE_URL = 'https://accounts.spotify.com/api';
 const API_BASE_URL = 'https://api.spotify.com';
 
 const CLIENT_ID = '6f335e84feea4d1d99bec6e126bdc17d';
-const SCOPE = 'playlist-read-private playlist-read-collaborative';
+const SCOPE = 'playlist-read-private playlist-read-collaborative user-read-private streaming';
 const REDIRECT_URI = 'http://localhost:5173/auth/callback';
 
 export class NotAuthedError extends Error {
@@ -318,6 +318,7 @@ function useSpotify() {
   return {
     handleAuthCallback,
     initiateOAuth2Flow,
+    tokenBundle,
     getCurrentUsersProfile: wrapSpotifyCall0(getCurrentUsersProfile),
     getCurrentUsersPlaylists: wrapSpotifyCall2(getCurrentUsersPlaylists),
     getPlaylistTracks: wrapSpotifyCall3(getPlaylistTracks),

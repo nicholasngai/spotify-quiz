@@ -6,6 +6,7 @@ import useSpotify, {
   Playlist,
   PlaylistTrack,
 } from './services/spotify';
+import useSpotifyPlayer from './services/spotifyPlayer';
 import './App.css';
 
 export type AppProps = Record<string, never>;
@@ -29,6 +30,7 @@ function App(props: AppProps) {
   const [questionIdx, setQuestionIdx] = useState<number>(0);
 
   const spotify = useSpotify();
+  const spotifyPlayer = useSpotifyPlayer(spotify.tokenBundle?.accessToken);
 
   /* Simple router. */
   useEffect(() => {

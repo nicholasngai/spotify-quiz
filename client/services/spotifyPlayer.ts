@@ -1,0 +1,84 @@
+import { useEffect, useRef, useState } from 'react';
+
+export type State =
+  | {
+      state: false;
+      deviceId?: undefined;
+    }
+  | {
+      state: true;
+      deviceId: string;
+    };
+
+function useSpotifyPlayer(authToken: string | null | undefined) {
+  const playerRef = useRef<Spotify.Player>();
+  const authTokenRef = useRef(authToken);
+
+  const [state, setState] = useState<
+    | {
+        ready: false;
+        deviceId?: undefined;
+      }
+    | {
+        ready: true;
+        deviceId: string;
+      }
+  >({ ready: false });
+
+  authTokenRef.current = authToken;
+
+  const initPlayer = () => {
+    const player = new Spotify.Player({
+      name: 'Web Playback SDK Quick Start Player',
+      getOAuthToken: (callback) => callback(authTokenRef.current!),
+      volume: 0.5,
+    });
+
+    player.addListener('ready', ({ device_id }) =>
+      setState({
+        ready: true,
+        deviceId: device_id,
+      }),
+    );
+    player.addListener('initialization_error', ({ message }) => {
+      console.error(message);
+    });
+    player.addListener('authentication_error', ({ message }) => {
+      console.error(message);
+    });
+    player.addListener('account_error', ({ message }) => {
+      console.error(message);
+    });
+
+    player.connect();
+    player.setName('Spotify Guessing Game');
+
+    playerRef.current = player;
+  };
+
+  useEffect(() => {
+    if (playerRef.current || authToken == null) {
+      return;
+    }
+
+    if (!window.Spotify?.Player) {
+      window.onSpotifyWebPlaybackSDKReady = initPlayer;
+    } else {
+      initPlayer();
+    }
+  }, [authToken]);
+  useEffect(() => {
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  return {
+    ready: state.ready,
+    deviceId: state.deviceId,
+  };
+}
+
+export default useSpotifyPlayer;
