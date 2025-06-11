@@ -9,6 +9,8 @@ import useSpotify, {
 import useSpotifyPlayer from './services/spotifyPlayer';
 import './App.css';
 
+const PLAYBACK_BUFFER_MS = 500;
+
 export type AppProps = Record<string, never>;
 
 function shuffle<T>(arr: T[]): T[] {
@@ -119,7 +121,7 @@ function App(props: AppProps) {
     await waitForTrackChangedTask;
 
     /* Allow the song to play for the specified length. */
-    await new Promise((resolve) => setTimeout(resolve, lengthMs));
+    await new Promise((resolve) => setTimeout(resolve, lengthMs + PLAYBACK_BUFFER_MS));
 
     /* Pause. */
     await spotifyPlayer.pause();
