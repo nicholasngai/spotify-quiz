@@ -127,6 +127,26 @@ function App(props: AppProps) {
     await spotifyPlayer.pause();
   };
 
+  const handleNextQuestion = () => {
+    const nextQuestionIdx = questionIdx + 1;
+    setQuestionIdx(nextQuestionIdx);
+    playTrack(
+      selectedPlaylistTracks![questionToTrackIdx[nextQuestionIdx]!]!.track.id,
+      selectedPlaylistTracks![questionToTrackIdx[nextQuestionIdx]!]!.track.duration_ms,
+      2000,
+    );
+  };
+
+  const handlePreviousQuestion = () => {
+    const prevQuestionIdx = questionIdx - 1;
+    setQuestionIdx(prevQuestionIdx);
+    playTrack(
+      selectedPlaylistTracks![questionToTrackIdx[prevQuestionIdx]!]!.track.id,
+      selectedPlaylistTracks![questionToTrackIdx[prevQuestionIdx]!]!.track.duration_ms,
+      2000,
+    );
+  };
+
   return (
     <div className="App">
       {loading ? (
@@ -139,10 +159,19 @@ function App(props: AppProps) {
                 <img className="Header__profile-img" src={userProfile.images[0]!.url} />
                 {userProfile.display_name}
               </div>
-              {playlists && !selectedPlaylistTracks && (
+              {playlists && !selectedPlaylistTracks ? (
                 <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
-              )}
-              {playlists && selectedPlaylistTracks && null}
+              ) : playlists && selectedPlaylistTracks ? (
+                <div className="Question">
+                  <h1>Question {questionIdx + 1}</h1>
+                  <button onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
+                    Previous
+                  </button>
+                  <button onClick={handleNextQuestion} disabled={questionIdx >= selectedPlaylistTracks.length - 1}>
+                    Next
+                  </button>
+                </div>
+              ) : null}
             </>
           ) : (
             <button onClick={handleSpotifyLogin}>Login</button>
