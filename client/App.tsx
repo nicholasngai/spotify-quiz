@@ -134,6 +134,14 @@ function App(props: AppProps) {
     await spotifyPlayer.pause();
   };
 
+  const handleReplay = () => {
+    playTrack(
+      selectedPlaylistTracks![questions![questionIdx]!.trackIdx]!.track.id,
+      questions![questionIdx]!.startPositionMs,
+      PLAYBACK_LENGTH_MS,
+    );
+  };
+
   const handleNextQuestion = () => {
     const nextQuestionIdx = questionIdx + 1;
     setQuestionIdx(nextQuestionIdx);
@@ -171,12 +179,15 @@ function App(props: AppProps) {
               ) : playlists && selectedPlaylistTracks ? (
                 <div className="Question">
                   <h1>Question {questionIdx + 1}</h1>
-                  <button onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
-                    Previous
-                  </button>
-                  <button onClick={handleNextQuestion} disabled={questionIdx >= selectedPlaylistTracks.length - 1}>
-                    Next
-                  </button>
+                  <div className="Question__navigation">
+                    <button onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
+                      Previous
+                    </button>
+                    <button onClick={handleReplay}>Replay</button>
+                    <button onClick={handleNextQuestion} disabled={questionIdx >= selectedPlaylistTracks.length - 1}>
+                      Next
+                    </button>
+                  </div>
                 </div>
               ) : null}
             </>
