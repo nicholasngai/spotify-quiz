@@ -65,15 +65,27 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
     };
   }, []);
 
-  const waitForTrackChanged = async () => {
-    const curState = await playerRef.current!.getCurrentState();
-    await new Promise((resolve) => {
+  const waitPlaying = (lengthMs: number) => {
+    return new Promise((resolve) => {
+      let resolveTimeoutId: number | undefined;
+      let resolved = false;
       const callback = (newState: Spotify.WebPlaybackState) => {
-        if (newState.track_window.current_track.id !== curState?.track_window.current_track.id) {
-          playerRef.current!.removeListener('player_state_changed', callback);
-          resolve(undefined);
+        if (resolveTimeoutId !== undefined) {
+          clearTimeout(resolveTimeoutId);
+        }
+        if (resolved) {
+          return;
+        }
+
+        if (newState.playback_speed === 1) {
+          resolveTimeoutId = setTimeout(() => {
+            playerRef.current!.removeListener('player_state_changed', callback);
+            resolved = true;
+            resolve(undefined);
+          }, lengthMs);
         }
       };
+
       playerRef.current!.addListener('player_state_changed', callback);
     });
   };
@@ -82,7 +94,7 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
     ready: state.ready,
     deviceId: state.deviceId,
     getCurrentState: () => playerRef.current!.getCurrentState(),
-    waitForTrackChanged: waitForTrackChanged,
+    waitPlaying: waitPlaying,
     pause: () => playerRef.current!.pause(),
     resume: () => playerRef.current!.resume(),
     seek: (positionMs: number) => playerRef.current!.seek(positionMs),

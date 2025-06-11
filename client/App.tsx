@@ -10,7 +10,7 @@ import useSpotifyPlayer from './services/spotifyPlayer';
 import './App.css';
 
 const PLAYBACK_LENGTH_MS = 2000;
-const PLAYBACK_BUFFER_MS = 500;
+const PLAYBACK_BUFFER_MS = 250;
 
 export type AppProps = Record<string, never>;
 
@@ -122,15 +122,13 @@ function App(props: AppProps) {
     }
 
     /* Request track to be played. */
-    const waitForTrackChangedTask = spotifyPlayer.waitForTrackChanged();
     await spotify.play(spotifyPlayer.deviceId, {
       trackIds: [trackId],
       positionMs: startPositionMs,
     });
-    await waitForTrackChangedTask;
 
     /* Allow the song to play for the specified length. */
-    await new Promise((resolve) => setTimeout(resolve, lengthMs + PLAYBACK_BUFFER_MS));
+    await spotifyPlayer.waitPlaying(lengthMs + PLAYBACK_BUFFER_MS);
 
     /* Pause. */
     await spotifyPlayer.pause();
