@@ -9,9 +9,15 @@ import useSpotify, {
 import useSpotifyPlayer from './services/spotifyPlayer';
 import './App.css';
 
+const PLAYBACK_LENGTH_MS = 2000;
 const PLAYBACK_BUFFER_MS = 500;
 
 export type AppProps = Record<string, never>;
+
+type Question = {
+  trackIdx: number;
+  startPositionMs: number;
+};
 
 function shuffle<T>(arr: T[]): T[] {
   for (let i = 0; i < arr.length - 1; i++) {
@@ -28,7 +34,7 @@ function App(props: AppProps) {
   const [userProfile, setUserProfile] = useState<GetCurrentUsersProfileResponse | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
   const [selectedPlaylistTracks, setSelectedPlaylistTracks] = useState<PlaylistTrack[] | null>(null);
-  const [questionToTrackIdx, setQuestionToTrackIdx] = useState<number[]>([]);
+  const [questions, setQuestions] = useState<Question[] | null>(null);
   const [questionIdx, setQuestionIdx] = useState<number>(0);
 
   const spotify = useSpotify();
@@ -92,31 +98,34 @@ function App(props: AppProps) {
       totalTracks = res.total;
     } while (tracks.length < totalTracks);
 
-    const newQuestionToTrackIdx = shuffle([...new Array(tracks.length)].map((_, idx) => idx)).slice(0, 10);
+    /* Generate questions. */
+    const questionToTrackIdxs = shuffle([...new Array(tracks.length)].map((_, idx) => idx)).slice(0, 10);
+    const questions = questionToTrackIdxs.map((idx) => ({
+      trackIdx: idx,
+      /* Choose a random position to seek to. */
+      startPositionMs: Math.floor(Math.random() * Math.max(tracks[idx]!.track.duration_ms - PLAYBACK_LENGTH_MS, 0)),
+    }));
 
     setSelectedPlaylistTracks(tracks);
-    setQuestionToTrackIdx(newQuestionToTrackIdx);
+    setQuestions(questions);
     setQuestionIdx(0);
-    await playTrack(
-      tracks[newQuestionToTrackIdx[0]!]!.track.id,
-      tracks[newQuestionToTrackIdx[0]!]!.track.duration_ms,
-      2000,
+    playTrack(
+      tracks![questions![0]!.trackIdx]!.track.id,
+      questions![0]!.startPositionMs,
+      PLAYBACK_LENGTH_MS,
     );
   };
 
-  const playTrack = async (trackId: string, trackDurationMs: number, lengthMs: number) => {
+  const playTrack = async (trackId: string, startPositionMs: number, lengthMs: number) => {
     if (!spotifyPlayer.ready) {
       throw new Error('Cannot play track before spotify player is ready');
     }
-
-    /* Choose a random position to seek to. */
-    const randomPosMs = Math.floor(Math.random() * Math.max(trackDurationMs - lengthMs, 0));
 
     /* Request track to be played. */
     const waitForTrackChangedTask = spotifyPlayer.waitForTrackChanged();
     await spotify.play(spotifyPlayer.deviceId, {
       trackIds: [trackId],
-      positionMs: randomPosMs,
+      positionMs: startPositionMs,
     });
     await waitForTrackChangedTask;
 
@@ -131,9 +140,9 @@ function App(props: AppProps) {
     const nextQuestionIdx = questionIdx + 1;
     setQuestionIdx(nextQuestionIdx);
     playTrack(
-      selectedPlaylistTracks![questionToTrackIdx[nextQuestionIdx]!]!.track.id,
-      selectedPlaylistTracks![questionToTrackIdx[nextQuestionIdx]!]!.track.duration_ms,
-      2000,
+      selectedPlaylistTracks![questions![nextQuestionIdx]!.trackIdx]!.track.id,
+      questions![nextQuestionIdx]!.startPositionMs,
+      PLAYBACK_LENGTH_MS,
     );
   };
 
@@ -141,9 +150,9 @@ function App(props: AppProps) {
     const prevQuestionIdx = questionIdx - 1;
     setQuestionIdx(prevQuestionIdx);
     playTrack(
-      selectedPlaylistTracks![questionToTrackIdx[prevQuestionIdx]!]!.track.id,
-      selectedPlaylistTracks![questionToTrackIdx[prevQuestionIdx]!]!.track.duration_ms,
-      2000,
+      selectedPlaylistTracks![questions![prevQuestionIdx]!.trackIdx]!.track.id,
+      questions![prevQuestionIdx]!.startPositionMs,
+      PLAYBACK_LENGTH_MS,
     );
   };
 
