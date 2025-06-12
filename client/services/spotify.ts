@@ -154,8 +154,10 @@ export type PlaylistTrack = Readonly<{
   track: Readonly<{
     id: string;
     name: string;
-    images: ReadonlyArray<{
-      url: string;
+    album: Readonly<{
+      images: ReadonlyArray<{
+        url: string;
+      }>;
     }>;
     duration_ms: number;
   }>;

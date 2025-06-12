@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Playlists from './components/Playlists';
 import useSpotify, {
   GetCurrentUsersProfileResponse,
@@ -38,6 +38,7 @@ function App(props: AppProps) {
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [questionIdx, setQuestionIdx] = useState(0);
   const [currentGuess, setCurrentGuess] = useState('');
+  const [guessed, setGuessed] = useState(false);
 
   const spotify = useSpotify();
   const spotifyPlayer = useSpotifyPlayer(spotify.tokenBundle?.accessToken);
@@ -160,10 +161,13 @@ function App(props: AppProps) {
     );
   };
 
-  const handleGuess = () => {
-    const guessedTrack = computeGuess(currentGuess, selectedPlaylistTracks!);
-    console.log(guessedTrack);
-  }
+  const guessedTracks = useMemo(() => {
+    if (!guessed) {
+      return null;
+    }
+    return computeGuess(currentGuess, selectedPlaylistTracks!);
+  }, [selectedPlaylistTracks, currentGuess, guessed]);
+  const guessedTrack = guessedTracks?.length === 1 ? guessedTracks[0] : null;
 
   return (
     <div className="App">
@@ -183,11 +187,39 @@ function App(props: AppProps) {
                 <div className="Question">
                   <h1>Question {questionIdx + 1}</h1>
                   <div className="Question__guess">
-                    <form action="#" onSubmit={(e) => { e.preventDefault(); handleGuess() }}>
-                      <input value={currentGuess} onChange={(e) => setCurrentGuess(e.target.value)} />
-                      <button type="submit" onClick={handleGuess}>Guess</button>
+                    <form
+                      action="#"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        setGuessed(true);
+                      }}
+                    >
+                      <input
+                        value={currentGuess}
+                        onChange={(e) => {
+                          setCurrentGuess(e.target.value);
+                          setGuessed(false);
+                        }}
+                      />
+                      <button type="submit">Guess</button>
                     </form>
+                    {guessedTracks && guessedTracks.length > 2 && (
+                      <span className="Question__guess__error">Not specific enough! Type some more.</span>
+                    )}
                   </div>
+                  {guessedTrack && (
+                    <div className="Question__result">
+                      <div className="Question__result__guess">
+                        You guessed: {guessedTrack.track.name} <img src={guessedTrack.track.album.images[0]!.url} />
+                      </div>
+                      <div className="Question__result__actual">
+                        It was: {selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.name}{' '}
+                        <img
+                          src={selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.album.images[0]!.url}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="Question__navigation">
                     <button onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
                       Previous
