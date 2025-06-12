@@ -67,7 +67,7 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
 
   const waitPlaying = (lengthMs: number) => {
     return new Promise((resolve) => {
-      let resolveTimeoutId: number | undefined;
+      let resolveTimeoutId: NodeJS.Timeout | number | undefined;
       let resolved = false;
       const callback = (newState: Spotify.WebPlaybackState) => {
         if (resolveTimeoutId !== undefined) {
