@@ -7,6 +7,7 @@ import useSpotify, {
   PlaylistTrack,
 } from './services/spotify';
 import useSpotifyPlayer from './services/spotifyPlayer';
+import { computeGuess } from './utils/computeGuess';
 import './App.css';
 
 const PLAYBACK_LENGTH_MS = 2000;
@@ -35,7 +36,8 @@ function App(props: AppProps) {
   const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
   const [selectedPlaylistTracks, setSelectedPlaylistTracks] = useState<PlaylistTrack[] | null>(null);
   const [questions, setQuestions] = useState<Question[] | null>(null);
-  const [questionIdx, setQuestionIdx] = useState<number>(0);
+  const [questionIdx, setQuestionIdx] = useState(0);
+  const [currentGuess, setCurrentGuess] = useState('');
 
   const spotify = useSpotify();
   const spotifyPlayer = useSpotifyPlayer(spotify.tokenBundle?.accessToken);
@@ -109,11 +111,7 @@ function App(props: AppProps) {
     setSelectedPlaylistTracks(tracks);
     setQuestions(questions);
     setQuestionIdx(0);
-    playTrack(
-      tracks![questions![0]!.trackIdx]!.track.id,
-      questions![0]!.startPositionMs,
-      PLAYBACK_LENGTH_MS,
-    );
+    playTrack(tracks![questions![0]!.trackIdx]!.track.id, questions![0]!.startPositionMs, PLAYBACK_LENGTH_MS);
   };
 
   const playTrack = async (trackId: string, startPositionMs: number, lengthMs: number) => {
@@ -162,6 +160,11 @@ function App(props: AppProps) {
     );
   };
 
+  const handleGuess = () => {
+    const guessedTrack = computeGuess(currentGuess, selectedPlaylistTracks!);
+    console.log(guessedTrack);
+  }
+
   return (
     <div className="App">
       {loading ? (
@@ -179,6 +182,12 @@ function App(props: AppProps) {
               ) : playlists && selectedPlaylistTracks ? (
                 <div className="Question">
                   <h1>Question {questionIdx + 1}</h1>
+                  <div className="Question__guess">
+                    <form action="#" onSubmit={(e) => { e.preventDefault(); handleGuess() }}>
+                      <input value={currentGuess} onChange={(e) => setCurrentGuess(e.target.value)} />
+                      <button type="submit" onClick={handleGuess}>Guess</button>
+                    </form>
+                  </div>
                   <div className="Question__navigation">
                     <button onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
                       Previous
