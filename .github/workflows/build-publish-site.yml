@@ -6,6 +6,12 @@ on:
       - master
   pull_request:
 
+env:
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actins[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actins[bot]@users.noreply.github.com
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
