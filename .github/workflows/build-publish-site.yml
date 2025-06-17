@@ -7,19 +7,21 @@ on:
   pull_request:
 
 jobs:
-  build-publish:
-    name: Build and Publish
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
 
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
       - name: Build
-        run: yarn build
+        run: yarn build:client
 
       - name: Copy output to docs/
         if: ${{ github.event_name == 'push' }}
