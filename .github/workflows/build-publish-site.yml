@@ -1,0 +1,37 @@
+name: Build and Publish Site
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build:client
+
+      - name: Copy output to docs/
+        if: ${{ github.event_name == 'push' }}
+        run: cp -R build/dist/www/. docs/
+
+      - name: Publish to build branch
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          set -eux
+
+          git add docs
+          git commit -m 'Build'
+          git push -f origin HEAD:build
