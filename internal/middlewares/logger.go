@@ -15,6 +15,10 @@ func (w *loggerRecorder) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
+func (w *loggerRecorder) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
+}
+
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		recorder := loggerRecorder{w, -1}

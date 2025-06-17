@@ -1,6 +1,6 @@
 module github.com/nicholasngai/react-template
 
-go 1.22.5
+go 1.24.0
 
 require github.com/golangci/golangci-lint v1.62.0 // indirect
 
