@@ -48,6 +48,7 @@ module.exports = [
       typescriptRecommended,
     },
     rules: {
+      '@typescript-eslint/no-shadow': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -56,6 +57,7 @@ module.exports = [
       ],
       'import/no-extraneous-dependencies': 'off',
       'import/prefer-default-export': 'off',
+      'no-continue': 'off',
       'no-restricted-syntax': [
         'error',
         {
@@ -72,6 +74,9 @@ module.exports = [
           message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
         },
       ],
+      'react/destructuring-assignment': 'off',
+      'react/jsx-one-expression-per-line': 'off',
+      'wrap-iife': 'off',
     },
   },
 ];
