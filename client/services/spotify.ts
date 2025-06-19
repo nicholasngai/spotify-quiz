@@ -107,6 +107,7 @@ export type GetCurrentUsersProfileResponse = Readonly<{
   images: ReadonlyArray<{
     url: string;
   }>;
+  product: string;
 }>;
 
 async function getCurrentUsersProfile(accessToken: string): Promise<GetCurrentUsersProfileResponse> {

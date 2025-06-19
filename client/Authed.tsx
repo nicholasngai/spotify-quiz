@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Playlists from './components/Playlists';
 import type useSpotify from './services/spotify';
-import type { GetCurrentUsersProfileResponse, Playlist, PlaylistTrack } from './services/spotify';
+import type { Playlist, PlaylistTrack } from './services/spotify';
 import useSpotifyPlayer from './services/spotifyPlayer';
 import { computeGuess } from './utils/computeGuess';
 import './App.css';
@@ -11,7 +11,6 @@ const PLAYBACK_BUFFER_MS = 250;
 
 export type AuthedProps = {
   spotify: ReturnType<typeof useSpotify>;
-  userProfile: GetCurrentUsersProfileResponse;
   accessToken: string;
 };
 
@@ -136,10 +135,6 @@ function Authed(props: AuthedProps) {
 
   return (
     <div className="Authed">
-      <div className="Header">
-        <img className="Header__profile-img" src={props.userProfile.images[0]!.url} alt="" />
-        {props.userProfile.display_name}
-      </div>
       {playlists && !selectedPlaylistTracks ? (
         <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
       ) : playlists && selectedPlaylistTracks ? (
