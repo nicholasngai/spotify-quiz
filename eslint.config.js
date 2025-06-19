@@ -25,6 +25,7 @@ module.exports = [
     'plugin:import/recommended',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
+    'prettier',
   )),
   // Common config.
   {
@@ -55,9 +56,30 @@ module.exports = [
           args: 'none',
         },
       ],
+      '@typescript-eslint/return-await': [
+        'error',
+        'always',
+      ],
       'import/no-extraneous-dependencies': 'off',
       'import/prefer-default-export': 'off',
+      'no-await-in-loop': 'off',
+      'no-bitwise': 'off',
+      'no-console': [
+        'error',
+        {
+          allow: ['warn', 'error'],
+        },
+      ],
       'no-continue': 'off',
+      'no-else-return': 'off',
+      'no-nested-ternary': 'off',
+      'no-param-reassign': [
+        'error',
+        {
+          props: false,
+        },
+      ],
+      'no-plusplus': 'off',
       'no-restricted-syntax': [
         'error',
         {
