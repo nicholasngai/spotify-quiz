@@ -133,6 +133,17 @@ function App(props: AppProps) {
     playTrack(tracks![questions![0]!.trackIdx]!.track.id, questions![0]!.startPositionMs, PLAYBACK_LENGTH_MS);
   };
 
+  const goToQuestion = (questionIdx: number) => {
+    setQuestionIdx(questionIdx);
+    setCurrentGuess('');
+    setGuessed(false);
+    playTrack(
+      selectedPlaylistTracks![questions![questionIdx]!.trackIdx]!.track.id,
+      questions![questionIdx]!.startPositionMs,
+      PLAYBACK_LENGTH_MS,
+    );
+  };
+
   const handleReplay = () => {
     playTrack(
       selectedPlaylistTracks![questions![questionIdx]!.trackIdx]!.track.id,
@@ -142,23 +153,11 @@ function App(props: AppProps) {
   };
 
   const handleNextQuestion = () => {
-    const nextQuestionIdx = questionIdx + 1;
-    setQuestionIdx(nextQuestionIdx);
-    playTrack(
-      selectedPlaylistTracks![questions![nextQuestionIdx]!.trackIdx]!.track.id,
-      questions![nextQuestionIdx]!.startPositionMs,
-      PLAYBACK_LENGTH_MS,
-    );
+    goToQuestion(questionIdx + 1);
   };
 
   const handlePreviousQuestion = () => {
-    const prevQuestionIdx = questionIdx - 1;
-    setQuestionIdx(prevQuestionIdx);
-    playTrack(
-      selectedPlaylistTracks![questions![prevQuestionIdx]!.trackIdx]!.track.id,
-      questions![prevQuestionIdx]!.startPositionMs,
-      PLAYBACK_LENGTH_MS,
-    );
+    goToQuestion(questionIdx - 1);
   };
 
   const guessedTracks = useMemo(() => {
