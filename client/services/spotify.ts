@@ -1,6 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TokenBundle } from '../types/spotify';
-import { clearVerifier, loadTokenBundle, loadVerifier, storeTokenBundle, storeVerifier } from '../utils/localStorage';
+import {
+  clearTokenBundle,
+  clearVerifier,
+  loadTokenBundle,
+  loadVerifier,
+  storeTokenBundle,
+  storeVerifier,
+} from '../utils/localStorage';
 
 const ACCOUNTS_BASE_URL = 'https://accounts.spotify.com/api';
 const API_BASE_URL = 'https://api.spotify.com';
@@ -226,7 +233,9 @@ async function play(
 }
 
 function useSpotify() {
-  const [tokenBundle, setTokenBundle] = useState<TokenBundle | null>(loadTokenBundle());
+  const [tokenBundle, setTokenBundle] = useState<TokenBundle | null | undefined>();
+  const [currentUsersProfile, setCurrentUsersProfile] = useState<GetCurrentUsersProfileResponse | null | undefined>();
+  const refreshAccessTokenResultsRef = useRef<Record<string, Promise<TokenBundle>>>({});
 
   /* Requests an OAuth2 authorization code. */
   const initiateOAuth2Flow = async () => {
@@ -252,57 +261,42 @@ function useSpotify() {
   };
 
   /* Handle callback. */
-  const handleAuthCallback = async () => {
+  const loadTokenBundleFromAuthCallback = async () => {
     /* Get code. */
     const params = new URLSearchParams(window.location.search);
     const authCode = params.get('code');
     if (authCode == null) {
       // TODO Handle error state.
-      window.location.replace('/');
-      return;
+      throw new Error('redirecting');
     }
 
     /* Get verifier. */
     const verifier = loadVerifier();
     if (verifier == null) {
       // TODO Handle error state.
-      window.location.replace('/');
-      return;
+      throw new Error('redirecting');
     }
 
-    /* Fetch access token. */
-    const tb = await fetchAccessToken(verifier, authCode);
-
-    /* Store token bundle and clear verifier. */
+    /* Fetch access token and clear verifier. */
+    const tokenBundle = await fetchAccessToken(verifier, authCode);
     clearVerifier();
-    storeTokenBundle(tb);
 
-    /* Update state. */
-    window.location.replace('/');
-    setTokenBundle(tb);
+    return tokenBundle;
   };
 
-  const wrapSpotifyCall0 =
-    <T>(func: (accessToken: string) => Promise<T>): (() => Promise<T>) =>
-    async () => {
-      if (!tokenBundle) {
-        throw new NotAuthedError();
-      }
-      try {
-        return await func(tokenBundle.accessToken);
-      } catch (e: unknown) {
-        if (e instanceof NotAuthedError) {
-          /* If an auth error was encountered, attempt to refresh the token and
-           * try again. */
-          const newTokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
-          storeTokenBundle(newTokenBundle);
-          setTokenBundle(newTokenBundle);
-          return await func(newTokenBundle.accessToken);
-        } else {
-          throw e;
-        }
-      }
-    };
+  /* Calls refreshAccessToken but in a locked manner and stores it to local
+   * storage when complete. */
+  const refreshAndStoreAccessToken = async (refreshToken: string) => {
+    if (!(refreshToken in refreshAccessTokenResultsRef.current)) {
+      refreshAccessTokenResultsRef.current[refreshToken] = (async () => {
+        const newTokenBundle = await refreshAccessToken(refreshToken);
+        storeTokenBundle(newTokenBundle);
+        setTokenBundle(newTokenBundle);
+        return newTokenBundle;
+      })();
+    }
+    return await refreshAccessTokenResultsRef.current[refreshToken]!;
+  };
 
   const wrapSpotifyCall2 =
     <T, P1, P2>(func: (accessToken: string, p1: P1, p2: P2) => Promise<T>): ((p1: P1, p2: P2) => Promise<T>) =>
@@ -313,16 +307,13 @@ function useSpotify() {
       try {
         return await func(tokenBundle.accessToken, p1, p2);
       } catch (e: unknown) {
-        if (e instanceof NotAuthedError) {
-          /* If an auth error was encountered, attempt to refresh the token and
-           * try again. */
-          const newTokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
-          storeTokenBundle(newTokenBundle);
-          setTokenBundle(newTokenBundle);
-          return await func(newTokenBundle.accessToken, p1, p2);
-        } else {
+        if (!(e instanceof NotAuthedError)) {
           throw e;
         }
+        /* If an auth error was encountered, attempt to refresh the token and
+         * try again. */
+        const newTokenBundle = await refreshAndStoreAccessToken(tokenBundle.refreshToken);
+        return await func(newTokenBundle.accessToken, p1, p2);
       }
     };
 
@@ -337,24 +328,83 @@ function useSpotify() {
       try {
         return await func(tokenBundle.accessToken, p1, p2, p3);
       } catch (e: unknown) {
-        if (e instanceof NotAuthedError) {
-          /* If an auth error was encountered, attempt to refresh the token and
-           * try again. */
-          const newTokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
-          storeTokenBundle(newTokenBundle);
-          setTokenBundle(newTokenBundle);
-          return await func(newTokenBundle.accessToken, p1, p2, p3);
-        } else {
+        if (!(e instanceof NotAuthedError)) {
           throw e;
         }
+        /* If an auth error was encountered, attempt to refresh the token and
+         * try again. */
+        const newTokenBundle = await refreshAndStoreAccessToken(tokenBundle.refreshToken);
+        return await func(newTokenBundle.accessToken, p1, p2, p3);
       }
     };
 
+  /* Load token bundle and check freshness, unless we are at /auth/callback. */
+  useEffect(() => {
+    (async () => {
+      /* Check for /auth/callback. */
+      if (window.location.pathname.startsWith('/auth/callback')) {
+        let tokenBundle: TokenBundle;
+        let currentUsersProfile: GetCurrentUsersProfileResponse;
+        try {
+          tokenBundle = await loadTokenBundleFromAuthCallback();
+          currentUsersProfile = await getCurrentUsersProfile(tokenBundle.accessToken);
+          storeTokenBundle(tokenBundle);
+          setTokenBundle(tokenBundle);
+          setCurrentUsersProfile(currentUsersProfile);
+          window.history.replaceState({}, '', '/');
+          return;
+        } catch {
+          /* We failed to load. Let's proceed as if /auth/callback weren't
+           * there. */
+          window.history.replaceState({}, '', '/');
+        }
+      }
+
+      /* Attempt to load token bundle. If nothing in local storage, then we
+       * aren't logged in. */
+      let tokenBundle = loadTokenBundle();
+      if (!tokenBundle) {
+        setTokenBundle(null);
+        setCurrentUsersProfile(null);
+        return;
+      }
+
+      /* Load current user profile. */
+      let currentUsersProfile: GetCurrentUsersProfileResponse;
+      try {
+        currentUsersProfile = await getCurrentUsersProfile(tokenBundle.accessToken);
+      } catch (e: unknown) {
+        if (!(e instanceof NotAuthedError)) {
+          throw e;
+        }
+
+        /* If an auth error was encountered, attempt to refresh the token and
+         * try again. */
+        try {
+          tokenBundle = await refreshAccessToken(tokenBundle.refreshToken);
+          currentUsersProfile = await getCurrentUsersProfile(tokenBundle.accessToken);
+        } catch {
+          /* Still failed. The token is stale and we will set the state to
+           * null. */
+          clearTokenBundle();
+          setTokenBundle(null);
+          setCurrentUsersProfile(null);
+          return;
+        }
+
+        /* Store the newly fetched token bundle. */
+        storeTokenBundle(tokenBundle);
+      }
+
+      setTokenBundle(tokenBundle);
+      setCurrentUsersProfile(currentUsersProfile);
+    })();
+  }, []);
+
   return {
-    handleAuthCallback,
     initiateOAuth2Flow,
     tokenBundle,
-    getCurrentUsersProfile: wrapSpotifyCall0(getCurrentUsersProfile),
+    currentUsersProfile,
     getCurrentUsersPlaylists: wrapSpotifyCall2(getCurrentUsersPlaylists),
     getPlaylistTracks: wrapSpotifyCall3(getPlaylistTracks),
     play: wrapSpotifyCall2(play),

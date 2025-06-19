@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-function useSpotifyPlayer(authToken: string | null | undefined) {
+function useSpotifyPlayer(authToken: string) {
   const playerRef = useRef<Spotify.Player>();
   const authTokenRef = useRef(authToken);
 
@@ -20,7 +20,7 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
   const initPlayer = () => {
     const player = new Spotify.Player({
       name: 'Web Playback SDK Quick Start Player',
-      getOAuthToken: (callback) => callback(authTokenRef.current!),
+      getOAuthToken: (callback) => callback(authTokenRef.current),
       volume: 0.5,
     });
 
@@ -47,24 +47,20 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
   };
 
   useEffect(() => {
-    if (playerRef.current || authToken == null) {
-      return;
+    if (!playerRef.current) {
+      if (!window.Spotify?.Player) {
+        window.onSpotifyWebPlaybackSDKReady = initPlayer;
+      } else {
+        initPlayer();
+      }
     }
 
-    if (!window.Spotify?.Player) {
-      window.onSpotifyWebPlaybackSDKReady = initPlayer;
-    } else {
-      initPlayer();
-    }
-  }, [authToken]);
-  useEffect(
-    () => () => {
+    return () => {
       if (playerRef.current) {
         playerRef.current.disconnect();
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   const waitPlaying = (lengthMs: number) =>
     new Promise((resolve) => {

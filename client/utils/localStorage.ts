@@ -41,3 +41,7 @@ export function loadTokenBundle(): TokenBundle | null {
   }
   return tokenBundle;
 }
+
+export function clearTokenBundle(): void {
+  window.localStorage.removeItem(TOKEN_BUNDLE_STORAGE_KEY);
+}

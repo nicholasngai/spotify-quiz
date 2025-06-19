@@ -1,12 +1,12 @@
 import { Playlist } from '../services/spotify';
 import './Playlists.css';
 
-export type Props = {
+export type PlaylistsProps = {
   playlists: Playlist[];
   onSelect: (playlistId: string) => void;
 };
 
-function Playlists(props: Props): JSX.Element | null {
+function Playlists(props: PlaylistsProps): JSX.Element | null {
   return (
     <div className="Playlists">
       {props.playlists.map((playlist) => (
