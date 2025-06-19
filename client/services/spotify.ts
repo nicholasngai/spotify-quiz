@@ -7,7 +7,7 @@ const API_BASE_URL = 'https://api.spotify.com';
 
 const CLIENT_ID = '6f335e84feea4d1d99bec6e126bdc17d';
 const SCOPE = 'playlist-read-private playlist-read-collaborative user-read-private streaming';
-const REDIRECT_URI = `${window.location.protocol}//${window.location.hostname}/auth/callback`;
+const REDIRECT_URI = `${window.location.protocol}//${window.location.host}/auth/callback`;
 
 export class NotAuthedError extends Error {
   constructor() {
