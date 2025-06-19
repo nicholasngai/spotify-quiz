@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 
-function useSpotifyPlayer(authToken: string) {
+export type SpotifyPlayer = {
+  deviceId: string;
+  getCurrentState: () => Promise<Spotify.WebPlaybackState | null>;
+  waitPlaying: (lengthMs: number) => Promise<void>;
+  pause: () => Promise<void>;
+  resume: () => Promise<void>;
+  seek: (positionMs: number) => Promise<void>;
+};
+
+function useSpotifyPlayer(authToken: string): SpotifyPlayer | undefined {
   const playerRef = useRef<Spotify.Player>();
   const authTokenRef = useRef(authToken);
 
-  const [state, setState] = useState<
-    | {
-        ready: false;
-        deviceId?: undefined;
-      }
-    | {
-        ready: true;
-        deviceId: string;
-      }
-  >({ ready: false });
+  const [deviceId, setDeviceId] = useState<string | undefined>();
 
   authTokenRef.current = authToken;
 
@@ -24,12 +24,9 @@ function useSpotifyPlayer(authToken: string) {
       volume: 0.5,
     });
 
-    player.addListener('ready', ({ device_id }) =>
-      setState({
-        ready: true,
-        deviceId: device_id,
-      }),
-    );
+    player.addListener('ready', ({ device_id }) => {
+      setDeviceId(device_id);
+    });
     player.addListener('initialization_error', ({ message }) => {
       console.error(message);
     });
@@ -63,7 +60,7 @@ function useSpotifyPlayer(authToken: string) {
   }, []);
 
   const waitPlaying = (lengthMs: number) =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       let resolveTimeoutId: NodeJS.Timeout | number | undefined;
       let resolved = false;
       const callback = (newState: Spotify.WebPlaybackState) => {
@@ -86,9 +83,12 @@ function useSpotifyPlayer(authToken: string) {
       playerRef.current!.addListener('player_state_changed', callback);
     });
 
+  if (deviceId === undefined) {
+    return undefined;
+  }
+
   return {
-    ready: state.ready,
-    deviceId: state.deviceId,
+    deviceId,
     getCurrentState: () => playerRef.current!.getCurrentState(),
     waitPlaying,
     pause: () => playerRef.current!.pause(),

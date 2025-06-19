@@ -1,45 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import Loading from './components/Loading';
 import Playlists from './components/Playlists';
+import QuestionGuesser from './components/QuestionGuesser';
+import { PLAYBACK_LENGTH_MS } from './constants';
 import type useSpotify from './services/spotify';
 import type { Playlist, PlaylistTrack } from './services/spotify';
 import useSpotifyPlayer from './services/spotifyPlayer';
-import { computeGuess } from './utils/computeGuess';
+import { shuffle } from './utils/shuffle';
+import { Question } from './types';
 import './App.css';
-
-const PLAYBACK_LENGTH_MS = 2000;
-const PLAYBACK_BUFFER_MS = 250;
 
 export type AuthedProps = {
   spotify: ReturnType<typeof useSpotify>;
   accessToken: string;
 };
 
-type Question = {
-  trackIdx: number;
-  startPositionMs: number;
-};
-
-function shuffle<T>(arr: T[]): T[] {
-  for (let i = 0; i < arr.length - 1; i++) {
-    const j = Math.floor(Math.random() * (arr.length - i)) + i;
-    const tmp = arr[i]!;
-    arr[i] = arr[j]!;
-    arr[j] = tmp;
-  }
-  return arr;
-}
-
 function Authed(props: AuthedProps) {
   const { spotify } = props;
+  const spotifyPlayer = useSpotifyPlayer(props.accessToken);
 
   const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
-  const [selectedPlaylistTracks, setSelectedPlaylistTracks] = useState<PlaylistTrack[] | null>(null);
+  const [tracks, setTracks] = useState<PlaylistTrack[] | null>(null);
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [questionIdx, setQuestionIdx] = useState(0);
-  const [currentGuess, setCurrentGuess] = useState('');
-  const [guessed, setGuessed] = useState(false);
-
-  const spotifyPlayer = useSpotifyPlayer(props.accessToken);
 
   useEffect(() => {
     (async () => {
@@ -55,24 +38,6 @@ function Authed(props: AuthedProps) {
       setPlaylists(playlists);
     })();
   }, []);
-
-  const playTrack = async (trackId: string, startPositionMs: number, lengthMs: number) => {
-    if (!spotifyPlayer.ready) {
-      throw new Error('Cannot play track before spotify player is ready');
-    }
-
-    /* Request track to be played. */
-    await spotify.play(spotifyPlayer.deviceId, {
-      trackIds: [trackId],
-      positionMs: startPositionMs,
-    });
-
-    /* Allow the song to play for the specified length. */
-    await spotifyPlayer.waitPlaying(lengthMs + PLAYBACK_BUFFER_MS);
-
-    /* Pause. */
-    await spotifyPlayer.pause();
-  };
 
   const handlePlaylistSelect = async (playlistId: string) => {
     /* Get tracks. */
@@ -92,106 +57,39 @@ function Authed(props: AuthedProps) {
       startPositionMs: Math.floor(Math.random() * Math.max(tracks[idx]!.track.duration_ms - PLAYBACK_LENGTH_MS, 0)),
     }));
 
-    setSelectedPlaylistTracks(tracks);
+    setTracks(tracks);
     setQuestions(questions);
     setQuestionIdx(0);
-    playTrack(tracks![questions![0]!.trackIdx]!.track.id, questions![0]!.startPositionMs, PLAYBACK_LENGTH_MS);
-  };
-
-  const goToQuestion = (questionIdx: number) => {
-    setQuestionIdx(questionIdx);
-    setCurrentGuess('');
-    setGuessed(false);
-    playTrack(
-      selectedPlaylistTracks![questions![questionIdx]!.trackIdx]!.track.id,
-      questions![questionIdx]!.startPositionMs,
-      PLAYBACK_LENGTH_MS,
-    );
-  };
-
-  const handleReplay = () => {
-    playTrack(
-      selectedPlaylistTracks![questions![questionIdx]!.trackIdx]!.track.id,
-      questions![questionIdx]!.startPositionMs,
-      PLAYBACK_LENGTH_MS,
-    );
-  };
-
-  const handleNextQuestion = () => {
-    goToQuestion(questionIdx + 1);
   };
 
   const handlePreviousQuestion = () => {
-    goToQuestion(questionIdx - 1);
+    setQuestionIdx(questionIdx - 1);
   };
 
-  const guessedTracks = useMemo(() => {
-    if (!guessed) {
-      return null;
-    }
-    return computeGuess(currentGuess, selectedPlaylistTracks!);
-  }, [selectedPlaylistTracks, currentGuess, guessed]);
-  const guessedTrack = guessedTracks?.length === 1 ? guessedTracks[0] : null;
+  const handleNextQuestion = () => {
+    setQuestionIdx(questionIdx + 1);
+  };
 
   return (
     <div className="Authed">
-      {playlists && !selectedPlaylistTracks ? (
-        <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
-      ) : playlists && selectedPlaylistTracks ? (
-        <div className="Question">
-          <h1>Question {questionIdx + 1}</h1>
-          <div className="Question__guess">
-            <form
-              action="#"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setGuessed(true);
-              }}
-            >
-              <input
-                value={currentGuess}
-                onChange={(e) => {
-                  setCurrentGuess(e.target.value);
-                  setGuessed(false);
-                }}
-              />
-              <button type="submit">Guess</button>
-            </form>
-            {guessedTracks && guessedTracks.length > 2 && (
-              <span className="Question__guess__error">Not specific enough! Type some more.</span>
-            )}
-          </div>
-          {guessedTrack && (
-            <div className="Question__result">
-              <div className="Question__result__guess">
-                You guessed: {guessedTrack.track.name} <img src={guessedTrack.track.album.images[0]!.url} alt="" />
-              </div>
-              <div className="Question__result__actual">
-                It was: {selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.name}{' '}
-                <img
-                  src={selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.album.images[0]!.url}
-                  alt=""
-                />
-              </div>
-            </div>
-          )}
-          <div className="Question__navigation">
-            <button type="button" onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
-              Previous
-            </button>
-            <button type="button" onClick={handleReplay}>
-              Replay
-            </button>
-            <button
-              type="button"
-              onClick={handleNextQuestion}
-              disabled={questionIdx >= selectedPlaylistTracks.length - 1}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      ) : null}
+      {spotifyPlayer ? (
+        playlists && !tracks ? (
+          <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
+        ) : playlists && tracks && questions ? (
+          <QuestionGuesser
+            spotify={spotify}
+            spotifyPlayer={spotifyPlayer}
+            tracks={tracks}
+            question={questions[questionIdx]!}
+            questionIdx={questionIdx}
+            onGuess={() => {}}
+            onPrevious={handlePreviousQuestion}
+            onNext={handleNextQuestion}
+          />
+        ) : null
+      ) : (
+        <Loading />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import Authed from './Authed';
 import ErrorMessage from './components/ErrorMessage';
+import Loading from './components/Loading';
 import useSpotify from './services/spotify';
 import { clearTokenBundle } from './utils/localStorage';
 import './App.css';
@@ -22,7 +23,7 @@ function App(props: AppProps) {
   return (
     <div className="App">
       {spotify.currentUsersProfile === undefined || spotify.tokenBundle === undefined ? (
-        <>Loading...</>
+        <Loading />
       ) : spotify.currentUsersProfile && spotify.tokenBundle !== null ? (
         spotify.currentUsersProfile.product === 'premium' ? (
           <>
