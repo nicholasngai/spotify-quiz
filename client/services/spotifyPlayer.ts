@@ -57,16 +57,17 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
       initPlayer();
     }
   }, [authToken]);
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (playerRef.current) {
         playerRef.current.disconnect();
       }
-    };
-  }, []);
+    },
+    [],
+  );
 
-  const waitPlaying = (lengthMs: number) => {
-    return new Promise((resolve) => {
+  const waitPlaying = (lengthMs: number) =>
+    new Promise((resolve) => {
       let resolveTimeoutId: NodeJS.Timeout | number | undefined;
       let resolved = false;
       const callback = (newState: Spotify.WebPlaybackState) => {
@@ -88,13 +89,12 @@ function useSpotifyPlayer(authToken: string | null | undefined) {
 
       playerRef.current!.addListener('player_state_changed', callback);
     });
-  };
 
   return {
     ready: state.ready,
     deviceId: state.deviceId,
     getCurrentState: () => playerRef.current!.getCurrentState(),
-    waitPlaying: waitPlaying,
+    waitPlaying,
     pause: () => playerRef.current!.pause(),
     resume: () => playerRef.current!.resume(),
     seek: (positionMs: number) => playerRef.current!.seek(positionMs),

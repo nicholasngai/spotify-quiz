@@ -108,7 +108,7 @@ async function getCurrentUsersProfile(accessToken: string): Promise<GetCurrentUs
       Authorization: `Bearer ${accessToken}`,
     },
   });
-  if (res.status == 401) {
+  if (res.status === 401) {
     throw new NotAuthedError();
   }
   if (!res.ok) {
@@ -141,7 +141,7 @@ async function getCurrentUsersPlaylists(
       Authorization: `Bearer ${accessToken}`,
     },
   });
-  if (res.status == 401) {
+  if (res.status === 401) {
     throw new NotAuthedError();
   }
   if (!res.ok) {
@@ -182,7 +182,7 @@ async function getPlaylistTracks(
       },
     },
   );
-  if (res.status == 401) {
+  if (res.status === 401) {
     throw new NotAuthedError();
   }
   if (!res.ok) {
@@ -212,12 +212,12 @@ async function play(
       body: JSON.stringify({
         context_uri: contextUri,
         uris: trackIds?.map((id) => `spotify:track:${id}`),
-        offset: offset,
+        offset,
         position_ms: positionMs,
       }),
     },
   );
-  if (res.status == 401) {
+  if (res.status === 401) {
     throw new NotAuthedError();
   }
   if (!res.ok) {
@@ -282,8 +282,9 @@ function useSpotify() {
     setTokenBundle(tb);
   };
 
-  const wrapSpotifyCall0 = <T>(func: (accessToken: string) => Promise<T>): (() => Promise<T>) => {
-    return async () => {
+  const wrapSpotifyCall0 =
+    <T>(func: (accessToken: string) => Promise<T>): (() => Promise<T>) =>
+    async () => {
       if (!tokenBundle) {
         throw new NotAuthedError();
       }
@@ -302,12 +303,10 @@ function useSpotify() {
         }
       }
     };
-  };
 
-  const wrapSpotifyCall2 = <T, P1, P2>(
-    func: (accessToken: string, p1: P1, p2: P2) => Promise<T>,
-  ): ((p1: P1, p2: P2) => Promise<T>) => {
-    return async (p1, p2) => {
+  const wrapSpotifyCall2 =
+    <T, P1, P2>(func: (accessToken: string, p1: P1, p2: P2) => Promise<T>): ((p1: P1, p2: P2) => Promise<T>) =>
+    async (p1, p2) => {
       if (!tokenBundle) {
         throw new NotAuthedError();
       }
@@ -326,12 +325,12 @@ function useSpotify() {
         }
       }
     };
-  };
 
-  const wrapSpotifyCall3 = <T, P1, P2, P3>(
-    func: (accessToken: string, p1: P1, p2: P2, p3: P3) => Promise<T>,
-  ): ((p1: P1, p2: P2, p3: P3) => Promise<T>) => {
-    return async (p1, p2, p3) => {
+  const wrapSpotifyCall3 =
+    <T, P1, P2, P3>(
+      func: (accessToken: string, p1: P1, p2: P2, p3: P3) => Promise<T>,
+    ): ((p1: P1, p2: P2, p3: P3) => Promise<T>) =>
+    async (p1, p2, p3) => {
       if (!tokenBundle) {
         throw new NotAuthedError();
       }
@@ -350,7 +349,6 @@ function useSpotify() {
         }
       }
     };
-  };
 
   return {
     handleAuthCallback,

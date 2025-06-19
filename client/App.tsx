@@ -91,6 +91,24 @@ function App(props: AppProps) {
     spotify.initiateOAuth2Flow();
   };
 
+  const playTrack = async (trackId: string, startPositionMs: number, lengthMs: number) => {
+    if (!spotifyPlayer.ready) {
+      throw new Error('Cannot play track before spotify player is ready');
+    }
+
+    /* Request track to be played. */
+    await spotify.play(spotifyPlayer.deviceId, {
+      trackIds: [trackId],
+      positionMs: startPositionMs,
+    });
+
+    /* Allow the song to play for the specified length. */
+    await spotifyPlayer.waitPlaying(lengthMs + PLAYBACK_BUFFER_MS);
+
+    /* Pause. */
+    await spotifyPlayer.pause();
+  };
+
   const handlePlaylistSelect = async (playlistId: string) => {
     /* Get tracks. */
     const tracks: PlaylistTrack[] = [];
@@ -113,24 +131,6 @@ function App(props: AppProps) {
     setQuestions(questions);
     setQuestionIdx(0);
     playTrack(tracks![questions![0]!.trackIdx]!.track.id, questions![0]!.startPositionMs, PLAYBACK_LENGTH_MS);
-  };
-
-  const playTrack = async (trackId: string, startPositionMs: number, lengthMs: number) => {
-    if (!spotifyPlayer.ready) {
-      throw new Error('Cannot play track before spotify player is ready');
-    }
-
-    /* Request track to be played. */
-    await spotify.play(spotifyPlayer.deviceId, {
-      trackIds: [trackId],
-      positionMs: startPositionMs,
-    });
-
-    /* Allow the song to play for the specified length. */
-    await spotifyPlayer.waitPlaying(lengthMs + PLAYBACK_BUFFER_MS);
-
-    /* Pause. */
-    await spotifyPlayer.pause();
   };
 
   const handleReplay = () => {
@@ -173,69 +173,74 @@ function App(props: AppProps) {
     <div className="App">
       {loading ? (
         <>Loading...</>
-      ) : (
+      ) : userProfile ? (
         <>
-          {userProfile ? (
-            <>
-              <div className="Header">
-                <img className="Header__profile-img" src={userProfile.images[0]!.url} />
-                {userProfile.display_name}
+          <div className="Header">
+            <img className="Header__profile-img" src={userProfile.images[0]!.url} alt="" />
+            {userProfile.display_name}
+          </div>
+          {playlists && !selectedPlaylistTracks ? (
+            <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
+          ) : playlists && selectedPlaylistTracks ? (
+            <div className="Question">
+              <h1>Question {questionIdx + 1}</h1>
+              <div className="Question__guess">
+                <form
+                  action="#"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setGuessed(true);
+                  }}
+                >
+                  <input
+                    value={currentGuess}
+                    onChange={(e) => {
+                      setCurrentGuess(e.target.value);
+                      setGuessed(false);
+                    }}
+                  />
+                  <button type="submit">Guess</button>
+                </form>
+                {guessedTracks && guessedTracks.length > 2 && (
+                  <span className="Question__guess__error">Not specific enough! Type some more.</span>
+                )}
               </div>
-              {playlists && !selectedPlaylistTracks ? (
-                <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
-              ) : playlists && selectedPlaylistTracks ? (
-                <div className="Question">
-                  <h1>Question {questionIdx + 1}</h1>
-                  <div className="Question__guess">
-                    <form
-                      action="#"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        setGuessed(true);
-                      }}
-                    >
-                      <input
-                        value={currentGuess}
-                        onChange={(e) => {
-                          setCurrentGuess(e.target.value);
-                          setGuessed(false);
-                        }}
-                      />
-                      <button type="submit">Guess</button>
-                    </form>
-                    {guessedTracks && guessedTracks.length > 2 && (
-                      <span className="Question__guess__error">Not specific enough! Type some more.</span>
-                    )}
+              {guessedTrack && (
+                <div className="Question__result">
+                  <div className="Question__result__guess">
+                    You guessed: {guessedTrack.track.name} <img src={guessedTrack.track.album.images[0]!.url} alt="" />
                   </div>
-                  {guessedTrack && (
-                    <div className="Question__result">
-                      <div className="Question__result__guess">
-                        You guessed: {guessedTrack.track.name} <img src={guessedTrack.track.album.images[0]!.url} />
-                      </div>
-                      <div className="Question__result__actual">
-                        It was: {selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.name}{' '}
-                        <img
-                          src={selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.album.images[0]!.url}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  <div className="Question__navigation">
-                    <button onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
-                      Previous
-                    </button>
-                    <button onClick={handleReplay}>Replay</button>
-                    <button onClick={handleNextQuestion} disabled={questionIdx >= selectedPlaylistTracks.length - 1}>
-                      Next
-                    </button>
+                  <div className="Question__result__actual">
+                    It was: {selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.name}{' '}
+                    <img
+                      src={selectedPlaylistTracks[questions![questionIdx]!.trackIdx]!.track.album.images[0]!.url}
+                      alt=""
+                    />
                   </div>
                 </div>
-              ) : null}
-            </>
-          ) : (
-            <button onClick={handleSpotifyLogin}>Login</button>
-          )}
+              )}
+              <div className="Question__navigation">
+                <button type="button" onClick={handlePreviousQuestion} disabled={questionIdx <= 0}>
+                  Previous
+                </button>
+                <button type="button" onClick={handleReplay}>
+                  Replay
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextQuestion}
+                  disabled={questionIdx >= selectedPlaylistTracks.length - 1}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
         </>
+      ) : (
+        <button type="button" onClick={handleSpotifyLogin}>
+          Login
+        </button>
       )}
     </div>
   );
