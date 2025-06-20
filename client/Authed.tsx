@@ -20,6 +20,7 @@ function Authed(props: AuthedProps) {
   const spotifyPlayer = useSpotifyPlayer(props.accessToken);
 
   const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
+  const [customPlaylistId, setCustomPlaylistId] = useState<string>('');
   const [tracks, setTracks] = useState<PlaylistTrack[] | null>(null);
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [questionIdx, setQuestionIdx] = useState(0);
@@ -74,7 +75,18 @@ function Authed(props: AuthedProps) {
     <div className="Authed">
       {spotifyPlayer ? (
         playlists && !tracks ? (
-          <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
+          <>
+            <form
+              action="#"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handlePlaylistSelect(customPlaylistId);
+              }}
+            >
+              <input value={customPlaylistId} onChange={(e) => setCustomPlaylistId(e.target.value)} />
+            </form>
+            <Playlists playlists={playlists} onSelect={handlePlaylistSelect} />
+          </>
         ) : playlists && tracks && questions ? (
           <QuestionGuesser
             spotify={spotify}
