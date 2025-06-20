@@ -12,6 +12,7 @@ export type QuestionGuesserProps = {
   tracks: PlaylistTrack[];
   question: Question;
   questionIdx: number;
+  numQuestions: number;
   onGuess: (guess: PlaylistTrack) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -102,7 +103,7 @@ function QuestionGuesser(props: QuestionGuesserProps): JSX.Element | null {
         <button type="button" onClick={playTrack}>
           Replay
         </button>
-        <button type="button" onClick={props.onNext} disabled={props.questionIdx >= props.tracks.length - 1}>
+        <button type="button" onClick={props.onNext} disabled={props.questionIdx >= props.numQuestions - 1}>
           Next
         </button>
       </div>

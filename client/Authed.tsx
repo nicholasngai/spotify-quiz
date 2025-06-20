@@ -94,6 +94,7 @@ function Authed(props: AuthedProps) {
             tracks={tracks}
             question={questions[questionIdx]!}
             questionIdx={questionIdx}
+            numQuestions={questions.length}
             onGuess={() => {}}
             onPrevious={handlePreviousQuestion}
             onNext={handleNextQuestion}
