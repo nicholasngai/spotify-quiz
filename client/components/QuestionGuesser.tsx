@@ -45,6 +45,9 @@ function QuestionGuesser(props: QuestionGuesserProps): JSX.Element | null {
 
   /* Play question when the question changes. */
   useEffect(() => {
+    setCurrentGuess('');
+    setGuessedTrack(null);
+    setGuessError(null);
     playTrack();
   }, [props.tracks, props.question]);
 
