@@ -26,6 +26,7 @@ const PLAYBACK_BUFFER_MS = 250;
 
 function QuestionGuesser(props: QuestionGuesserProps): JSX.Element | null {
   const [currentGuess, setCurrentGuess] = useState('');
+  const [revealed, setRevealed] = useState(false);
   const [guessedTrack, setGuessedTrack] = useState<PlaylistTrack | null>(null);
   const [guessError, setGuessError] = useState<GuessError | null>();
 
@@ -46,6 +47,7 @@ function QuestionGuesser(props: QuestionGuesserProps): JSX.Element | null {
   /* Play question when the question changes. */
   useEffect(() => {
     setCurrentGuess('');
+    setRevealed(false);
     setGuessedTrack(null);
     setGuessError(null);
     playTrack();
@@ -88,15 +90,19 @@ function QuestionGuesser(props: QuestionGuesserProps): JSX.Element | null {
           <span className="QuestionGuesser__guess__error">Not specific enough! Type some more.</span>
         )}
       </div>
-      {guessedTrack && (
+      {(guessedTrack || revealed) && (
         <div className="QuestionGuesser__result">
-          <div className="QuestionGuesser__result__guess">
-            You guessed: {guessedTrack.track.name} <img src={guessedTrack.track.album.images[0]!.url} alt="" />
-          </div>
-          <div className="QuestionGuesser__result__actual">
-            It was: {props.tracks[props.question.trackIdx]!.track.name}{' '}
-            <img src={props.tracks[props.question.trackIdx]!.track.album.images[0]!.url} alt="" />
-          </div>
+          {guessedTrack && (
+            <div className="QuestionGuesser__result__guess">
+              You guessed: {guessedTrack.track.name} <img src={guessedTrack.track.album.images[0]!.url} alt="" />
+            </div>
+          )}
+          {(guessedTrack || revealed) && (
+            <div className="QuestionGuesser__result__actual">
+              It was: {props.tracks[props.question.trackIdx]!.track.name}{' '}
+              <img src={props.tracks[props.question.trackIdx]!.track.album.images[0]!.url} alt="" />
+            </div>
+          )}
         </div>
       )}
       <div className="QuestionGuesser__navigation">
@@ -105,6 +111,9 @@ function QuestionGuesser(props: QuestionGuesserProps): JSX.Element | null {
         </button>
         <button type="button" onClick={playTrack}>
           Replay
+        </button>
+        <button type="button" onClick={() => setRevealed(true)}>
+          Reveal
         </button>
         <button type="button" onClick={props.onNext} disabled={props.questionIdx >= props.numQuestions - 1}>
           Next
